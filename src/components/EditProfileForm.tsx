@@ -5,30 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import { X } from "lucide-react";
-
-// Simple toast function to avoid circular dependency issues
-const showToast = (title: string, description: string, variant: 'default' | 'destructive' = 'default') => {
-  // Create a simple toast notification
-  const toastEl = document.createElement('div');
-  toastEl.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg max-w-sm ${
-    variant === 'destructive' 
-      ? 'bg-red-600 text-white' 
-      : 'bg-green-600 text-white'
-  }`;
-  toastEl.innerHTML = `
-    <div class="font-medium">${title}</div>
-    <div class="text-sm opacity-90">${description}</div>
-  `;
-  
-  document.body.appendChild(toastEl);
-  
-  // Remove after 3 seconds
-  setTimeout(() => {
-    if (document.body.contains(toastEl)) {
-      document.body.removeChild(toastEl);
-    }
-  }, 3000);
-};
+import { simpleToast } from "@/utils/simpleToast";
 
 interface EditProfileFormProps {
   initialName: string;
@@ -69,14 +46,18 @@ const EditProfileForm = ({
         throw profileError || emailError;
       }
 
-      showToast("Profile updated!", "Your info was updated.");
+      simpleToast({
+        title: "Profile updated!",
+        description: "Your info was updated.",
+        variant: "default"
+      });
       onSuccess();
     } catch (err: any) {
-      showToast(
-        "Update failed",
-        err?.message || "Unable to update profile.",
-        "destructive"
-      );
+      simpleToast({
+        title: "Update failed",
+        description: err?.message || "Unable to update profile.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }

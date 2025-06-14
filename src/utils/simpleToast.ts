@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 // Simple toast utility to avoid circular dependencies
 export interface ToastOptions {
   title?: string;
