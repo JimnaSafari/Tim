@@ -6,15 +6,17 @@ import { Input } from '@/components/ui/input';
 import { X, Smartphone, CheckCircle, AlertCircle } from 'lucide-react';
 import { mpesaService, STKPushRequest } from '@/services/mpesaService';
 import { toast } from 'sonner';
+import PaymentSplitInfo from './PaymentSplitInfo';
 
 interface MpesaPaymentProps {
   amount: number;
   purpose: string;
+  batchId?: string;
   onClose: () => void;
   onSuccess: (transactionId: string) => void;
 }
 
-const MpesaPayment = ({ amount, purpose, onClose, onSuccess }: MpesaPaymentProps) => {
+const MpesaPayment = ({ amount, purpose, batchId, onClose, onSuccess }: MpesaPaymentProps) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [checkoutRequestId, setCheckoutRequestId] = useState<string | null>(null);
@@ -53,8 +55,9 @@ const MpesaPayment = ({ amount, purpose, onClose, onSuccess }: MpesaPaymentProps
     const request: STKPushRequest = {
       amount,
       phoneNumber: formatPhoneNumber(phoneNumber),
-      accountReference: `SAV-${Date.now()}`,
-      transactionDesc: purpose
+      accountReference: batchId ? `BATCH-${batchId}` : `SAV-${Date.now()}`,
+      transactionDesc: purpose,
+      batchId
     };
 
     try {
@@ -173,6 +176,16 @@ const MpesaPayment = ({ amount, purpose, onClose, onSuccess }: MpesaPaymentProps
           <p className="text-gray-400 text-sm mt-2">{purpose}</p>
           <p className="text-gray-300 text-sm mt-2">{getStatusMessage()}</p>
         </div>
+
+        {/* Show payment split info for batch contributions */}
+        {batchId && checkoutRequestId && (
+          <div className="mb-4">
+            <PaymentSplitInfo 
+              checkoutRequestId={checkoutRequestId} 
+              totalAmount={amount} 
+            />
+          </div>
+        )}
 
         {paymentStatus === 'pending' && (
           <div className="space-y-4">

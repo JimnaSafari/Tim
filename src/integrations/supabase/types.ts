@@ -216,6 +216,66 @@ export type Database = {
           },
         ]
       }
+      mpesa_transactions: {
+        Row: {
+          account_reference: string | null
+          amount: number
+          checkout_request_id: string
+          completed_splits_count: number | null
+          created_at: string
+          has_splits: boolean | null
+          id: string
+          merchant_request_id: string | null
+          mpesa_receipt_number: string | null
+          phone_number: string
+          result_code: string | null
+          result_desc: string | null
+          status: string | null
+          total_splits_count: number | null
+          transaction_desc: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_reference?: string | null
+          amount: number
+          checkout_request_id: string
+          completed_splits_count?: number | null
+          created_at?: string
+          has_splits?: boolean | null
+          id?: string
+          merchant_request_id?: string | null
+          mpesa_receipt_number?: string | null
+          phone_number: string
+          result_code?: string | null
+          result_desc?: string | null
+          status?: string | null
+          total_splits_count?: number | null
+          transaction_desc?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_reference?: string | null
+          amount?: number
+          checkout_request_id?: string
+          completed_splits_count?: number | null
+          created_at?: string
+          has_splits?: boolean | null
+          id?: string
+          merchant_request_id?: string | null
+          mpesa_receipt_number?: string | null
+          phone_number?: string
+          result_code?: string | null
+          result_desc?: string | null
+          status?: string | null
+          total_splits_count?: number | null
+          transaction_desc?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       one_time_contributions: {
         Row: {
           amount_due: number
@@ -266,6 +326,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_routing_config: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          pool_money_bank_account: string
+          pool_money_mpesa_number: string
+          pool_money_threshold: number
+          service_fee_mpesa_number: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          pool_money_bank_account?: string
+          pool_money_mpesa_number?: string
+          pool_money_threshold?: number
+          service_fee_mpesa_number?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          pool_money_bank_account?: string
+          pool_money_mpesa_number?: string
+          pool_money_threshold?: number
+          service_fee_mpesa_number?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_splits: {
+        Row: {
+          amount: number
+          created_at: string
+          destination_identifier: string
+          destination_type: string
+          error_message: string | null
+          id: string
+          original_transaction_id: string
+          split_type: string
+          status: string
+          transaction_reference: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          destination_identifier: string
+          destination_type: string
+          error_message?: string | null
+          id?: string
+          original_transaction_id: string
+          split_type: string
+          status?: string
+          transaction_reference?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          destination_identifier?: string
+          destination_type?: string
+          error_message?: string | null
+          id?: string
+          original_transaction_id?: string
+          split_type?: string
+          status?: string
+          transaction_reference?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       payout_schedules: {
         Row: {
@@ -320,6 +455,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pool_balances: {
+        Row: {
+          bank_balance: number
+          batch_id: string
+          created_at: string
+          current_balance: number
+          id: string
+          last_bank_transfer_amount: number | null
+          last_bank_transfer_date: string | null
+          mpesa_balance: number
+          updated_at: string
+        }
+        Insert: {
+          bank_balance?: number
+          batch_id: string
+          created_at?: string
+          current_balance?: number
+          id?: string
+          last_bank_transfer_amount?: number | null
+          last_bank_transfer_date?: string | null
+          mpesa_balance?: number
+          updated_at?: string
+        }
+        Update: {
+          bank_balance?: number
+          batch_id?: string
+          created_at?: string
+          current_balance?: number
+          id?: string
+          last_bank_transfer_amount?: number | null
+          last_bank_transfer_date?: string | null
+          mpesa_balance?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

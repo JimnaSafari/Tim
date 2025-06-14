@@ -212,6 +212,35 @@ export const useBatches = () => {
     }
   };
 
+  const makeBatchContribution = async (batchId: string, amount: number, phoneNumber: string, description: string) => {
+    setLoading(true);
+    try {
+      const { mpesaService } = await import('@/services/mpesaService');
+      
+      const response = await mpesaService.initiateSTKPush({
+        amount,
+        phoneNumber,
+        accountReference: `BATCH-${batchId}`,
+        transactionDesc: description,
+        batchId // This will trigger payment splits
+      });
+
+      if (response.success) {
+        toast.success('Payment request sent! Check your phone for M-Pesa prompt.');
+      } else {
+        toast.error(response.errorMessage || 'Failed to initiate payment');
+      }
+
+      return response;
+    } catch (error: any) {
+      console.error('Error making batch contribution:', error);
+      toast.error(error.message || 'Failed to make contribution');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     createBatch,
     joinBatch,
@@ -219,6 +248,7 @@ export const useBatches = () => {
     updateContributionStatus,
     updateOneTimeContributionStatus,
     markPayoutAsPaid,
+    makeBatchContribution,
     loading
   };
 };
