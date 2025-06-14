@@ -48,6 +48,7 @@ const Dashboard = () => {
 
   const userName = userData?.profile?.full_name || 'User';
   const userInitials = getInitials(userName);
+  const avatarUrl = userData?.profile?.avatar_url;
 
   return (
     <div className="min-h-screen bg-dark-gradient text-white p-4 pb-24">
@@ -56,7 +57,7 @@ const Dashboard = () => {
         <div className="w-16 h-16 rounded-full overflow-hidden hover-lift mb-4">
           <Avatar className="w-16 h-16">
             <AvatarImage 
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" 
+              src={avatarUrl} 
               alt={userName}
             />
             <AvatarFallback className="bg-gradient-to-br from-cyan-400 to-purple-600 text-white font-semibold text-lg">
