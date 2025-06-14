@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,11 +5,13 @@ import { LogOut, Edit, User, FileText, ChevronRight, Moon, Shield, Users } from 
 import { useUserData } from '@/hooks/useUserData';
 import { useAuth } from '@/hooks/useAuth';
 import EditProfileForm from './EditProfileForm';
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
   const { userData, loading, refreshUserData } = useUserData();
   const { signOut } = useAuth();
   const [showEdit, setShowEdit] = useState(false);
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -88,7 +89,16 @@ const Profile = () => {
 
       {/* Menu Items */}
       <div className="space-y-3 mb-6">
-        <Card className="glassmorphism-dark p-4 border-0">
+        <Card
+          className="glassmorphism-dark p-4 border-0 cursor-pointer hover:brightness-125 transition"
+          onClick={() => navigate("/payment-requests")}
+          tabIndex={0}
+          role="button"
+          aria-label="View payment requests"
+          onKeyDown={e => {
+            if (e.key === "Enter" || e.key === " ") navigate("/payment-requests");
+          }}
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
