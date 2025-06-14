@@ -108,12 +108,21 @@ export const useBatches = () => {
         throw new Error('Please log in to update contribution status');
       }
 
+      // First get the contribution to access the amount_due
+      const { data: contribution, error: fetchError } = await supabase
+        .from('weekly_contributions')
+        .select('amount_due')
+        .eq('id', contributionId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from('weekly_contributions')
         .update({ 
           status, 
           payment_date: status === 'paid' ? new Date().toISOString() : null,
-          amount_paid: status === 'paid' ? 'amount_due' : 0
+          amount_paid: status === 'paid' ? contribution.amount_due : 0
         })
         .eq('id', contributionId);
 
