@@ -166,7 +166,16 @@ const Profile = () => {
           </div>
         </Card>
 
-        <Card className="glassmorphism-dark p-4 border-0">
+        <Card 
+          className="glassmorphism-dark p-4 border-0 cursor-pointer hover:brightness-125 transition"
+          onClick={() => navigate("/referrals")}
+          tabIndex={0}
+          role="button"
+          aria-label="View referral program"
+          onKeyDown={e => {
+            if (e.key === "Enter" || e.key === " ") navigate("/referrals");
+          }}
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">

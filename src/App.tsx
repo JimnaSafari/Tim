@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PaymentRequests from "./pages/PaymentRequests";
 import Statements from "./pages/Statements";
+import Referrals from "./pages/Referrals";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="/payment-requests" element={<PaymentRequests />} />
           <Route path="/statements" element={<Statements />} />
+          <Route path="/referrals" element={<Referrals />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

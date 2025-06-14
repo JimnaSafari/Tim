@@ -128,6 +128,54 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_amount: number | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_amount?: number | null
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          reward_amount?: number | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_id_fkey"
+            columns: ["referred_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       savings: {
         Row: {
           amount: number
@@ -166,12 +214,48 @@ export type Database = {
           },
         ]
       }
+      user_referral_codes: {
+        Row: {
+          created_at: string | null
+          id: string
+          referral_code: string
+          user_id: string
+          uses_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          referral_code: string
+          user_id: string
+          uses_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          referral_code?: string
+          user_id?: string
+          uses_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_referral_codes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       generate_invite_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_referral_code: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
