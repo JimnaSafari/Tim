@@ -7,12 +7,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, Calendar as CalendarIcon, Calculator, FileText, Users, Clock } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { useBatches } from '@/hooks/useBatches';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import CreateBatchFormHeader from './CreateBatchForm/CreateBatchFormHeader';
+import BatchTypeSelector from './CreateBatchForm/BatchTypeSelector';
+import WeeklyBatchForm from './CreateBatchForm/WeeklyBatchForm';
+import DailyBatchForm from './CreateBatchForm/DailyBatchForm';
+import FinancialBreakdown from './CreateBatchForm/FinancialBreakdown';
+import SchedulePreview from './CreateBatchForm/SchedulePreview';
+import KeyFeatures from './CreateBatchForm/KeyFeatures';
 
 interface CreateBatchFormProps {
   onClose: () => void;
@@ -172,20 +178,7 @@ const CreateBatchForm = ({ onClose, onSuccess }: CreateBatchFormProps) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
       <Card className="glassmorphism p-6 border-0 w-full max-w-4xl my-8">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Create New TiM Chama Batch
-          </h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="text-gray-400 hover:text-white p-1"
-          >
-            <X className="w-5 h-5" />
-          </Button>
-        </div>
+        <CreateBatchFormHeader onClose={onClose} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Form Section */}
@@ -213,83 +206,23 @@ const CreateBatchForm = ({ onClose, onSuccess }: CreateBatchFormProps) => {
                 />
               </div>
 
-              <div>
-                <Label className="text-gray-300 text-sm">Batch Type *</Label>
-                <Select value={formData.batchType} onValueChange={(value: 'weekly' | 'daily') => setFormData({ ...formData, batchType: value })}>
-                  <SelectTrigger className="bg-gray-800/50 border-gray-600 text-white mt-1">
-                    <SelectValue placeholder="Select batch type" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-600">
-                    <SelectItem value="weekly" className="text-white">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        Weekly Contributions
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="daily" className="text-white">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        Daily Payouts (10-Day)
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <BatchTypeSelector
+                batchType={formData.batchType}
+                onBatchTypeChange={(value) => setFormData({ ...formData, batchType: value })}
+              />
 
               {formData.batchType === 'weekly' ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-300 text-sm">Weekly Contribution (KES) *</Label>
-                    <Input
-                      type="number"
-                      value={formData.weeklyContribution}
-                      onChange={(e) => setFormData({ ...formData, weeklyContribution: e.target.value })}
-                      placeholder="1000"
-                      className="bg-gray-800/50 border-gray-600 text-white mt-1"
-                      required
-                      min="100"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-gray-300 text-sm">Members (2-20) *</Label>
-                    <Input
-                      type="number"
-                      value={formData.maxMembers}
-                      onChange={(e) => setFormData({ ...formData, maxMembers: e.target.value })}
-                      placeholder="10"
-                      className="bg-gray-800/50 border-gray-600 text-white mt-1"
-                      required
-                      min="2"
-                      max="20"
-                    />
-                  </div>
-                </div>
+                <WeeklyBatchForm
+                  weeklyContribution={formData.weeklyContribution}
+                  maxMembers={formData.maxMembers}
+                  onWeeklyContributionChange={(value) => setFormData({ ...formData, weeklyContribution: value })}
+                  onMaxMembersChange={(value) => setFormData({ ...formData, maxMembers: value })}
+                />
               ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-300 text-sm">One-Time Contribution (KES) *</Label>
-                    <Input
-                      type="number"
-                      value={formData.oneTimeContribution}
-                      onChange={(e) => setFormData({ ...formData, oneTimeContribution: e.target.value })}
-                      placeholder="10000"
-                      className="bg-gray-800/50 border-gray-600 text-white mt-1"
-                      required
-                      min="1000"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-gray-300 text-sm">Members (Fixed: 10)</Label>
-                    <Input
-                      type="number"
-                      value="10"
-                      disabled
-                      className="bg-gray-700/50 border-gray-600 text-gray-400 mt-1"
-                    />
-                  </div>
-                </div>
+                <DailyBatchForm
+                  oneTimeContribution={formData.oneTimeContribution}
+                  onOneTimeContributionChange={(value) => setFormData({ ...formData, oneTimeContribution: value })}
+                />
               )}
 
               <div className="grid grid-cols-2 gap-4">
@@ -360,119 +293,16 @@ const CreateBatchForm = ({ onClose, onSuccess }: CreateBatchFormProps) => {
 
           {/* Calculations Section */}
           <div className="space-y-4">
-            <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-600">
-              <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-                <Calculator className="w-4 h-4" />
-                Financial Breakdown
-              </h4>
-              
-              <div className="space-y-3 text-sm">
-                {formData.batchType === 'weekly' ? (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Total Payment/Member/Week:</span>
-                      <span className="text-green-400 font-semibold">
-                        KES {calculations.totalOneTimePayment.toLocaleString()}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Weekly Payout Amount:</span>
-                      <span className="text-blue-400 font-semibold">
-                        KES {calculations.weeklyPayout.toLocaleString()}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Total Pooled Amount:</span>
-                      <span className="text-purple-400 font-semibold">
-                        KES {calculations.totalPooledAmount.toLocaleString()}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">One-Time Payment/Member:</span>
-                      <span className="text-green-400 font-semibold">
-                        KES {calculations.totalOneTimePayment.toLocaleString()}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Daily Payout Amount:</span>
-                      <span className="text-blue-400 font-semibold">
-                        KES {calculations.dailyPayout.toLocaleString()}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Total Pool (10 Days):</span>
-                      <span className="text-purple-400 font-semibold">
-                        KES {calculations.totalPooledAmount.toLocaleString()}
-                      </span>
-                    </div>
-                  </>
-                )}
-                
-                <div className="flex justify-between border-t border-gray-600 pt-2">
-                  <span className="text-gray-400">Organizer Earnings:</span>
-                  <span className="text-cyan-400 font-semibold">
-                    KES {calculations.organizerEarnings.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </div>
+            <FinancialBreakdown batchType={formData.batchType} calculations={calculations} />
 
-            {/* Schedule Preview */}
-            {Number(formData.maxMembers) > 0 && (formData.batchType === 'weekly' ? calculations.weeklyPayout : calculations.dailyPayout) > 0 && (
-              <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-600">
-                <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  {formData.batchType === 'weekly' ? 'Payout Schedule Preview' : 'Daily Payout Schedule'}
-                </h4>
-                
-                <div className="space-y-2 text-xs max-h-32 overflow-y-auto">
-                  {Array.from({ length: Number(formData.maxMembers) }, (_, i) => (
-                    <div key={i} className="flex justify-between text-gray-300">
-                      <span>
-                        {formData.batchType === 'weekly' ? `Week ${i + 1}` : `Day ${i + 1}`} - Member {i + 1}:
-                      </span>
-                      <span className="text-green-400">
-                        KES {(formData.batchType === 'weekly' ? calculations.weeklyPayout : calculations.dailyPayout).toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <SchedulePreview
+              batchType={formData.batchType}
+              maxMembers={Number(formData.maxMembers)}
+              weeklyPayout={calculations.weeklyPayout}
+              dailyPayout={calculations.dailyPayout}
+            />
 
-            {/* Key Features */}
-            <div className="bg-gradient-to-r from-cyan-400/10 to-purple-600/10 rounded-lg p-4 border border-cyan-400/30">
-              <h4 className="text-white font-semibold mb-2">
-                {formData.batchType === 'weekly' ? 'Weekly TiM Chama Features' : 'Daily TiM Chama Features'}
-              </h4>
-              <ul className="text-xs text-gray-300 space-y-1">
-                {formData.batchType === 'weekly' ? (
-                  <>
-                    <li>• Weekly contribution schedule</li>
-                    <li>• Automatic payout generation</li>
-                    <li>• Weekly contribution reminders</li>
-                    <li>• Flexible member count (2-20)</li>
-                  </>
-                ) : (
-                  <>
-                    <li>• One-time contribution only</li>
-                    <li>• Daily payouts for 10 days</li>
-                    <li>• Fixed 10-member groups</li>
-                    <li>• No recurring payments needed</li>
-                  </>
-                )}
-                <li>• Legal agreement template</li>
-                <li>• M-Pesa integration for payments</li>
-                <li>• Transparent financial tracking</li>
-              </ul>
-            </div>
+            <KeyFeatures batchType={formData.batchType} />
           </div>
         </div>
       </Card>
