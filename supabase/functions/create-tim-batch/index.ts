@@ -29,53 +29,83 @@ serve(async (req) => {
       });
     }
 
+    const requestBody = await req.json();
     const { 
       name, 
       description, 
+      batchType = 'weekly',
       weeklyContribution, 
+      oneTimeContribution,
       serviceFeePerMember, 
       maxMembers, 
       payoutStartDate 
-    } = await req.json();
+    } = requestBody;
 
-    console.log('Creating TiM batch:', { name, weeklyContribution, serviceFeePerMember, maxMembers });
+    console.log('Creating TiM batch:', { name, batchType, weeklyContribution, oneTimeContribution, serviceFeePerMember, maxMembers });
 
     // Validate inputs
-    if (!name || !weeklyContribution || !maxMembers || !payoutStartDate) {
+    if (!name || !maxMembers || !payoutStartDate || !batchType) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    if (weeklyContribution < 100) {
-      return new Response(JSON.stringify({ error: 'Weekly contribution must be at least KES 100' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+    // Validate based on batch type
+    if (batchType === 'weekly') {
+      if (!weeklyContribution || weeklyContribution < 100) {
+        return new Response(JSON.stringify({ error: 'Weekly contribution must be at least KES 100' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
 
-    if (maxMembers < 2 || maxMembers > 20) {
-      return new Response(JSON.stringify({ error: 'Members must be between 2 and 20' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      if (maxMembers < 2 || maxMembers > 20) {
+        return new Response(JSON.stringify({ error: 'Weekly batch members must be between 2 and 20' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    } else if (batchType === 'daily') {
+      if (!oneTimeContribution || oneTimeContribution < 1000) {
+        return new Response(JSON.stringify({ error: 'One-time contribution must be at least KES 1,000' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      if (maxMembers !== 10) {
+        return new Response(JSON.stringify({ error: 'Daily batch must have exactly 10 members' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
     }
 
     // Create the batch
+    const batchData = {
+      name,
+      description,
+      created_by: user.id,
+      batch_type: batchType,
+      service_fee_per_member: serviceFeePerMember,
+      max_members: maxMembers,
+      current_members: 1,
+      status: 'recruiting',
+      payout_start_date: payoutStartDate,
+      cycle_duration_days: batchType === 'weekly' ? 7 * maxMembers : 10,
+      ...(batchType === 'weekly' 
+        ? { weekly_contribution: weeklyContribution }
+        : { 
+            one_time_contribution: oneTimeContribution,
+            daily_payout_amount: oneTimeContribution * maxMembers
+          }
+      )
+    };
+
     const { data: batch, error: batchError } = await supabase
       .from('batches')
-      .insert({
-        name,
-        description,
-        created_by: user.id,
-        weekly_contribution: weeklyContribution,
-        service_fee_per_member: serviceFeePerMember,
-        max_members: maxMembers,
-        current_members: 1,
-        status: 'recruiting',
-        payout_start_date: payoutStartDate
-      })
+      .insert(batchData)
       .select()
       .single();
 
@@ -99,27 +129,54 @@ serve(async (req) => {
 
     if (memberError) {
       console.error('Error adding creator as member:', memberError);
-      // Don't fail the entire operation, just log the error
     }
 
-    // Generate default reminder templates
-    const reminderTemplates = [
-      {
-        batch_id: batch.id,
-        template_type: 'weekly_reminder',
-        message_template: `🏦 TiM Chama Reminder\n\nHi {member_name}!\n\nYour weekly contribution of KES ${weeklyContribution + serviceFeePerMember} is due for ${batch.name}.\n\nContribution: KES ${weeklyContribution}\nService Fee: KES ${serviceFeePerMember}\nTotal: KES ${weeklyContribution + serviceFeePerMember}\n\nPlease make your payment before the deadline.\n\nThank you!`
-      },
-      {
-        batch_id: batch.id,
-        template_type: 'overdue_notice',
-        message_template: `⚠️ TiM Chama Overdue Notice\n\nHi {member_name},\n\nYour contribution for ${batch.name} is overdue.\n\nAmount Due: KES ${weeklyContribution + serviceFeePerMember}\n\nPlease make your payment immediately to avoid penalties.\n\nThank you for your cooperation.`
-      },
-      {
-        batch_id: batch.id,
-        template_type: 'payout_notification',
-        message_template: `🎉 TiM Chama Payout Notification\n\nCongratulations {member_name}!\n\nYou are receiving this week's payout from ${batch.name}.\n\nAmount: KES ${weeklyContribution * maxMembers}\n\nThe funds will be transferred to your M-Pesa shortly.\n\nEnjoy your payout! 💰`
-      }
-    ];
+    // Generate reminder templates based on batch type
+    const reminderTemplates = [];
+
+    if (batchType === 'weekly') {
+      reminderTemplates.push(
+        {
+          batch_id: batch.id,
+          template_type: 'weekly_reminder',
+          batch_type: 'weekly',
+          message_template: `🏦 TiM Chama Weekly Reminder\n\nHi {member_name}!\n\nYour weekly contribution of KES ${weeklyContribution + serviceFeePerMember} is due for ${batch.name}.\n\nContribution: KES ${weeklyContribution}\nService Fee: KES ${serviceFeePerMember}\nTotal: KES ${weeklyContribution + serviceFeePerMember}\n\nPlease make your payment before the deadline.\n\nThank you!`
+        },
+        {
+          batch_id: batch.id,
+          template_type: 'overdue_notice',
+          batch_type: 'weekly',
+          message_template: `⚠️ TiM Chama Overdue Notice\n\nHi {member_name},\n\nYour contribution for ${batch.name} is overdue.\n\nAmount Due: KES ${weeklyContribution + serviceFeePerMember}\n\nPlease make your payment immediately to avoid penalties.\n\nThank you for your cooperation.`
+        },
+        {
+          batch_id: batch.id,
+          template_type: 'payout_notification',
+          batch_type: 'weekly',
+          message_template: `🎉 TiM Chama Payout Notification\n\nCongratulations {member_name}!\n\nYou are receiving this week's payout from ${batch.name}.\n\nAmount: KES ${weeklyContribution * maxMembers}\n\nThe funds will be transferred to your M-Pesa shortly.\n\nEnjoy your payout! 💰`
+        }
+      );
+    } else {
+      reminderTemplates.push(
+        {
+          batch_id: batch.id,
+          template_type: 'one_time_reminder',
+          batch_type: 'daily',
+          message_template: `🏦 TiM Chama Daily - One-Time Payment\n\nHi {member_name}!\n\nYour one-time contribution of KES ${oneTimeContribution + serviceFeePerMember} is due for ${batch.name}.\n\nContribution: KES ${oneTimeContribution}\nService Fee: KES ${serviceFeePerMember}\nTotal: KES ${oneTimeContribution + serviceFeePerMember}\n\nPay once and receive KES ${oneTimeContribution * maxMembers} on your scheduled day!\n\nThank you!`
+        },
+        {
+          batch_id: batch.id,
+          template_type: 'daily_payout_notification',
+          batch_type: 'daily',
+          message_template: `🎉 TiM Chama Daily Payout\n\nCongratulations {member_name}!\n\nToday is your payout day from ${batch.name}.\n\nAmount: KES ${oneTimeContribution * maxMembers}\n\nThe funds will be transferred to your M-Pesa shortly.\n\nEnjoy your payout! 💰`
+        },
+        {
+          batch_id: batch.id,
+          template_type: 'overdue_notice',
+          batch_type: 'daily',
+          message_template: `⚠️ TiM Chama Payment Overdue\n\nHi {member_name},\n\nYour one-time contribution for ${batch.name} is overdue.\n\nAmount Due: KES ${oneTimeContribution + serviceFeePerMember}\n\nPlease make your payment immediately to secure your spot.\n\nThank you for your cooperation.`
+        }
+      );
+    }
 
     const { error: templatesError } = await supabase
       .from('contribution_reminders')
@@ -131,10 +188,14 @@ serve(async (req) => {
 
     console.log('TiM batch created successfully:', batch.id);
 
+    const successMessage = batchType === 'weekly' 
+      ? 'Weekly TiM Chama batch created successfully! Merry-go-round will start automatically when full.'
+      : 'Daily TiM Chama batch created successfully! 10-day cycle will start automatically when full.';
+
     return new Response(JSON.stringify({ 
       success: true, 
       batch,
-      message: 'TiM Chama batch created successfully! Merry-go-round will start automatically when full.'
+      message: successMessage
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

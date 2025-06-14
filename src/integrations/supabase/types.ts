@@ -95,16 +95,20 @@ export type Database = {
       batches: {
         Row: {
           agreement_generated: boolean | null
+          batch_type: string | null
           created_at: string | null
           created_by: string
           current_members: number | null
           current_week: number | null
+          cycle_duration_days: number | null
+          daily_payout_amount: number | null
           description: string | null
           id: string
           invite_code: string
           max_members: number
           monthly_contribution: number
           name: string
+          one_time_contribution: number | null
           payout_schedule_generated: boolean | null
           payout_start_date: string | null
           service_fee_per_member: number | null
@@ -115,16 +119,20 @@ export type Database = {
         }
         Insert: {
           agreement_generated?: boolean | null
+          batch_type?: string | null
           created_at?: string | null
           created_by: string
           current_members?: number | null
           current_week?: number | null
+          cycle_duration_days?: number | null
+          daily_payout_amount?: number | null
           description?: string | null
           id?: string
           invite_code: string
           max_members?: number
           monthly_contribution: number
           name: string
+          one_time_contribution?: number | null
           payout_schedule_generated?: boolean | null
           payout_start_date?: string | null
           service_fee_per_member?: number | null
@@ -135,16 +143,20 @@ export type Database = {
         }
         Update: {
           agreement_generated?: boolean | null
+          batch_type?: string | null
           created_at?: string | null
           created_by?: string
           current_members?: number | null
           current_week?: number | null
+          cycle_duration_days?: number | null
+          daily_payout_amount?: number | null
           description?: string | null
           id?: string
           invite_code?: string
           max_members?: number
           monthly_contribution?: number
           name?: string
+          one_time_contribution?: number | null
           payout_schedule_generated?: boolean | null
           payout_start_date?: string | null
           service_fee_per_member?: number | null
@@ -166,6 +178,7 @@ export type Database = {
       contribution_reminders: {
         Row: {
           batch_id: string
+          batch_type: string | null
           created_at: string | null
           id: string
           is_active: boolean | null
@@ -175,6 +188,7 @@ export type Database = {
         }
         Insert: {
           batch_id: string
+          batch_type?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -184,6 +198,7 @@ export type Database = {
         }
         Update: {
           batch_id?: string
+          batch_type?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -201,6 +216,57 @@ export type Database = {
           },
         ]
       }
+      one_time_contributions: {
+        Row: {
+          amount_due: number
+          amount_paid: number | null
+          batch_id: string
+          created_at: string | null
+          id: string
+          member_id: string
+          payment_date: string | null
+          reminder_sent: boolean | null
+          status: string | null
+        }
+        Insert: {
+          amount_due: number
+          amount_paid?: number | null
+          batch_id: string
+          created_at?: string | null
+          id?: string
+          member_id: string
+          payment_date?: string | null
+          reminder_sent?: boolean | null
+          status?: string | null
+        }
+        Update: {
+          amount_due?: number
+          amount_paid?: number | null
+          batch_id?: string
+          created_at?: string | null
+          id?: string
+          member_id?: string
+          payment_date?: string | null
+          reminder_sent?: boolean | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "one_time_contributions_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "one_time_contributions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payout_schedules: {
         Row: {
           batch_id: string
@@ -211,6 +277,7 @@ export type Database = {
           payment_date: string | null
           payout_amount: number
           payout_date: string
+          payout_frequency: string | null
           week_number: number
         }
         Insert: {
@@ -222,6 +289,7 @@ export type Database = {
           payment_date?: string | null
           payout_amount: number
           payout_date: string
+          payout_frequency?: string | null
           week_number: number
         }
         Update: {
@@ -233,6 +301,7 @@ export type Database = {
           payment_date?: string | null
           payout_amount?: number
           payout_date?: string
+          payout_frequency?: string | null
           week_number?: number
         }
         Relationships: [

@@ -16,6 +16,7 @@ interface BatchDetailsProps {
 const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
   const [payoutSchedule, setPayoutSchedule] = useState<any[]>([]);
   const [weeklyContributions, setWeeklyContributions] = useState<any[]>([]);
+  const [oneTimeContributions, setOneTimeContributions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAgreement, setShowAgreement] = useState(false);
 
@@ -43,22 +44,40 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
         setPayoutSchedule(payoutData || []);
       }
 
-      // Fetch weekly contributions for current week
-      const { data: contributionsData, error: contributionsError } = await supabase
-        .from('weekly_contributions')
-        .select(`
-          *,
-          profiles:member_id (
-            full_name
-          )
-        `)
-        .eq('batch_id', batch.id)
-        .order('week_number, member_id');
+      // Fetch contributions based on batch type
+      if (batch.batch_type === 'daily') {
+        const { data: oneTimeData, error: oneTimeError } = await supabase
+          .from('one_time_contributions')
+          .select(`
+            *,
+            profiles:member_id (
+              full_name
+            )
+          `)
+          .eq('batch_id', batch.id);
 
-      if (contributionsError) {
-        console.error('Error fetching contributions:', contributionsError);
+        if (oneTimeError) {
+          console.error('Error fetching one-time contributions:', oneTimeError);
+        } else {
+          setOneTimeContributions(oneTimeData || []);
+        }
       } else {
-        setWeeklyContributions(contributionsData || []);
+        const { data: contributionsData, error: contributionsError } = await supabase
+          .from('weekly_contributions')
+          .select(`
+            *,
+            profiles:member_id (
+              full_name
+            )
+          `)
+          .eq('batch_id', batch.id)
+          .order('week_number, member_id');
+
+        if (contributionsError) {
+          console.error('Error fetching contributions:', contributionsError);
+        } else {
+          setWeeklyContributions(contributionsData || []);
+        }
       }
     } catch (error) {
       console.error('Error fetching batch details:', error);
@@ -77,20 +96,22 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
     }
   };
 
-  // Use actual batch data or fallback to mock data
+  // Calculate financial data based on batch type
+  const isDaily = batch.batch_type === 'daily';
   const currentWeek = batch.current_week || 1;
-  const weeklyContribution = batch.weekly_contribution || batch.monthly_contribution || 1000;
+  const contribution = isDaily ? batch.one_time_contribution : batch.weekly_contribution || batch.monthly_contribution || 1000;
   const serviceFee = batch.service_fee_per_member || 100;
-  const totalWeeklyPayment = weeklyContribution + serviceFee;
-  const totalPayout = weeklyContribution * batch.max_members;
+  const totalPayment = contribution + serviceFee;
+  const payout = isDaily ? batch.daily_payout_amount : contribution * batch.max_members;
+  const cycleDuration = isDaily ? 10 : batch.max_members;
 
   // Use actual payout schedule or generate mock if empty
   const displayPayoutSchedule = payoutSchedule.length > 0 ? payoutSchedule : 
     batch.batch_members?.map((member: any, index: number) => ({
       week_number: index + 1,
       member_name: member.profiles?.full_name || `Member ${index + 1}`,
-      payout_amount: totalPayout,
-      payout_date: new Date(Date.now() + (index * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+      payout_amount: payout,
+      payout_date: new Date(Date.now() + (index * (isDaily ? 1 : 7) * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
       is_paid: false
     })) || [];
 
@@ -108,9 +129,14 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h3 className="text-2xl font-bold text-white mb-2">{batch.name}</h3>
-            <Badge className={`${getStatusColor(batch.status)} border animate-pulse-glow`}>
-              {batch.status}
-            </Badge>
+            <div className="flex gap-2">
+              <Badge className={`${getStatusColor(batch.status)} border animate-pulse-glow`}>
+                {batch.status}
+              </Badge>
+              <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                {isDaily ? 'Daily Payouts' : 'Weekly Contributions'}
+              </Badge>
+            </div>
           </div>
           <Button
             variant="ghost"
@@ -138,8 +164,10 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
             <div className="flex items-center gap-3">
               <DollarSign className="w-8 h-8 text-green-400" />
               <div>
-                <p className="text-gray-400 text-sm">Weekly Payment</p>
-                <p className="text-white font-semibold">KES {totalWeeklyPayment.toLocaleString()}</p>
+                <p className="text-gray-400 text-sm">
+                  {isDaily ? 'One-Time Payment' : 'Weekly Payment'}
+                </p>
+                <p className="text-white font-semibold">KES {totalPayment.toLocaleString()}</p>
               </div>
             </div>
           </Card>
@@ -148,8 +176,10 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
             <div className="flex items-center gap-3">
               <Calendar className="w-8 h-8 text-purple-400" />
               <div>
-                <p className="text-gray-400 text-sm">Current Week</p>
-                <p className="text-white font-semibold">{currentWeek} of {batch.total_weeks || batch.max_members}</p>
+                <p className="text-gray-400 text-sm">
+                  {isDaily ? 'Current Day' : 'Current Week'}
+                </p>
+                <p className="text-white font-semibold">{currentWeek} of {cycleDuration}</p>
               </div>
             </div>
           </Card>
@@ -158,8 +188,10 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
             <div className="flex items-center gap-3">
               <Clock className="w-8 h-8 text-cyan-400" />
               <div>
-                <p className="text-gray-400 text-sm">Weekly Payout</p>
-                <p className="text-white font-semibold">KES {totalPayout.toLocaleString()}</p>
+                <p className="text-gray-400 text-sm">
+                  {isDaily ? 'Daily Payout' : 'Weekly Payout'}
+                </p>
+                <p className="text-white font-semibold">KES {payout.toLocaleString()}</p>
               </div>
             </div>
           </Card>
@@ -170,16 +202,20 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
           <h4 className="text-lg font-semibold text-white mb-3">Financial Breakdown</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
-              <p className="text-gray-400">Weekly Contribution</p>
-              <p className="text-green-400 font-semibold">KES {weeklyContribution.toLocaleString()}</p>
+              <p className="text-gray-400">
+                {isDaily ? 'One-Time Contribution' : 'Weekly Contribution'}
+              </p>
+              <p className="text-green-400 font-semibold">KES {contribution.toLocaleString()}</p>
             </div>
             <div>
               <p className="text-gray-400">Service Fee</p>
               <p className="text-blue-400 font-semibold">KES {serviceFee.toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-gray-400">Total Weekly Payment</p>
-              <p className="text-white font-semibold">KES {totalWeeklyPayment.toLocaleString()}</p>
+              <p className="text-gray-400">
+                Total {isDaily ? 'One-Time' : 'Weekly'} Payment
+              </p>
+              <p className="text-white font-semibold">KES {totalPayment.toLocaleString()}</p>
             </div>
           </div>
         </Card>
@@ -204,7 +240,9 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
 
         {/* Payout Schedule */}
         <Card className="glassmorphism-dark p-4 mb-6 border-0">
-          <h4 className="text-lg font-semibold text-white mb-3">Payout Schedule</h4>
+          <h4 className="text-lg font-semibold text-white mb-3">
+            {isDaily ? 'Daily Payout Schedule (10 Days)' : 'Weekly Payout Schedule'}
+          </h4>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {displayPayoutSchedule.map((payout, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-800/50 rounded">
@@ -218,7 +256,9 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
                     <p className="text-white font-medium">
                       {payout.profiles?.full_name || payout.member_name || `Member ${index + 1}`}
                     </p>
-                    <p className="text-gray-400 text-sm">{payout.payout_date}</p>
+                    <p className="text-gray-400 text-sm">
+                      {isDaily ? `Day ${payout.week_number}` : `Week ${payout.week_number}`} - {payout.payout_date}
+                    </p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -232,33 +272,56 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
           </div>
         </Card>
 
-        {/* Weekly Contributions Status */}
-        {weeklyContributions.length > 0 && (
+        {/* Contributions Status */}
+        {(isDaily ? oneTimeContributions.length > 0 : weeklyContributions.length > 0) && (
           <Card className="glassmorphism-dark p-4 mb-6 border-0">
-            <h4 className="text-lg font-semibold text-white mb-3">Current Week Contributions</h4>
+            <h4 className="text-lg font-semibold text-white mb-3">
+              {isDaily ? 'One-Time Contributions Status' : 'Current Week Contributions'}
+            </h4>
             <div className="space-y-2 max-h-40 overflow-y-auto">
-              {weeklyContributions
-                .filter(contrib => contrib.week_number === currentWeek)
-                .map((contribution, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-gray-800/30 rounded">
-                  <div>
-                    <p className="text-white text-sm font-medium">
-                      {contribution.profiles?.full_name || `Member ${index + 1}`}
-                    </p>
-                    <p className="text-gray-400 text-xs">Week {contribution.week_number}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-white text-sm">KES {contribution.amount_due.toLocaleString()}</p>
-                    <Badge className={`text-xs ${
-                      contribution.status === 'paid' ? 'bg-green-500/20 text-green-400' :
-                      contribution.status === 'overdue' ? 'bg-red-500/20 text-red-400' :
-                      'bg-yellow-500/20 text-yellow-400'
-                    }`}>
-                      {contribution.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+              {isDaily 
+                ? oneTimeContributions.map((contribution, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-800/30 rounded">
+                      <div>
+                        <p className="text-white text-sm font-medium">
+                          {contribution.profiles?.full_name || `Member ${index + 1}`}
+                        </p>
+                        <p className="text-gray-400 text-xs">One-time payment</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-white text-sm">KES {contribution.amount_due.toLocaleString()}</p>
+                        <Badge className={`text-xs ${
+                          contribution.status === 'paid' ? 'bg-green-500/20 text-green-400' :
+                          contribution.status === 'overdue' ? 'bg-red-500/20 text-red-400' :
+                          'bg-yellow-500/20 text-yellow-400'
+                        }`}>
+                          {contribution.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))
+                : weeklyContributions
+                    .filter(contrib => contrib.week_number === currentWeek)
+                    .map((contribution, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-800/30 rounded">
+                      <div>
+                        <p className="text-white text-sm font-medium">
+                          {contribution.profiles?.full_name || `Member ${index + 1}`}
+                        </p>
+                        <p className="text-gray-400 text-xs">Week {contribution.week_number}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-white text-sm">KES {contribution.amount_due.toLocaleString()}</p>
+                        <Badge className={`text-xs ${
+                          contribution.status === 'paid' ? 'bg-green-500/20 text-green-400' :
+                          contribution.status === 'overdue' ? 'bg-red-500/20 text-red-400' :
+                          'bg-yellow-500/20 text-yellow-400'
+                        }`}>
+                          {contribution.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
             </div>
           </Card>
         )}
@@ -279,7 +342,7 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
                   </div>
                 </div>
                 <Badge className="bg-blue-500/20 text-blue-400">
-                  Week {index + 1} Payout
+                  {isDaily ? `Day ${index + 1} Payout` : `Week ${index + 1} Payout`}
                 </Badge>
               </div>
             ))}

@@ -9,7 +9,9 @@ export const useBatches = () => {
   const createBatch = async (batchData: {
     name: string;
     description?: string;
-    weeklyContribution: number;
+    batchType: 'weekly' | 'daily';
+    weeklyContribution?: number;
+    oneTimeContribution?: number;
     serviceFeePerMember: number;
     maxMembers: number;
     payoutStartDate: Date;
@@ -31,7 +33,11 @@ export const useBatches = () => {
 
       if (error) throw error;
 
-      toast.success('TiM Chama batch created successfully!');
+      const successMessage = batchData.batchType === 'weekly' 
+        ? 'Weekly TiM Chama batch created successfully!'
+        : 'Daily TiM Chama batch created successfully!';
+      
+      toast.success(successMessage);
       return data;
     } catch (error: any) {
       console.error('Error creating batch:', error);
@@ -138,6 +144,45 @@ export const useBatches = () => {
     }
   };
 
+  const updateOneTimeContributionStatus = async (contributionId: string, status: 'pending' | 'paid' | 'overdue') => {
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Please log in to update contribution status');
+      }
+
+      // First get the contribution to access the amount_due
+      const { data: contribution, error: fetchError } = await supabase
+        .from('one_time_contributions')
+        .select('amount_due')
+        .eq('id', contributionId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const { error } = await supabase
+        .from('one_time_contributions')
+        .update({ 
+          status, 
+          payment_date: status === 'paid' ? new Date().toISOString() : null,
+          amount_paid: status === 'paid' ? contribution.amount_due : 0
+        })
+        .eq('id', contributionId);
+
+      if (error) throw error;
+
+      toast.success('Contribution status updated successfully');
+    } catch (error: any) {
+      console.error('Error updating contribution status:', error);
+      toast.error(error.message || 'Failed to update contribution status');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const markPayoutAsPaid = async (payoutId: string) => {
     setLoading(true);
     try {
@@ -172,6 +217,7 @@ export const useBatches = () => {
     joinBatch,
     generateAgreement,
     updateContributionStatus,
+    updateOneTimeContributionStatus,
     markPayoutAsPaid,
     loading
   };
