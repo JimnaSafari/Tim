@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LogOut, Edit, User } from 'lucide-react';
+import { LogOut, Edit, User, FileText, ChevronRight, Moon, Shield, Users } from 'lucide-react';
 import { useUserData } from '@/hooks/useUserData';
 import { useAuth } from '@/hooks/useAuth';
 import EditProfileForm from './EditProfileForm';
