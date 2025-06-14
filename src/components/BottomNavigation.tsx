@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Users, Settings, User } from 'lucide-react';
+import { Home, Users, User, Grid3X3 } from 'lucide-react';
 
 interface BottomNavigationProps {
   activeTab: string;
@@ -9,15 +9,15 @@ interface BottomNavigationProps {
 
 const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
-    { id: 'home', label: 'Home', icon: Home },
-    { id: 'batches', label: 'Batches', icon: Users },
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'home', icon: Home },
+    { id: 'batches', icon: Users },
+    { id: 'settings', icon: Grid3X3 },
+    { id: 'profile', icon: User },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 safe-area-bottom">
-      <div className="flex justify-around">
+    <div className="fixed bottom-0 left-0 right-0 glassmorphism-dark border-t border-white/10 px-4 py-3 safe-area-bottom">
+      <div className="flex justify-around items-center">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -26,18 +26,15 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab, onTabCha
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`flex flex-col items-center py-2 px-3 min-w-0 transition-colors ${
+              className={`relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${
                 isActive 
-                  ? 'text-blue-600' 
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'gradient-primary' 
+                  : 'text-gray-500 hover:text-gray-300'
               }`}
             >
-              <Icon className={`w-6 h-6 mb-1 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
-              <span className={`text-xs font-medium ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>
-                {tab.label}
-              </span>
+              <Icon className={`w-6 h-6 ${isActive ? 'text-white' : 'text-gray-400'}`} />
               {isActive && (
-                <div className="absolute -top-1 w-2 h-2 bg-blue-600 rounded-full"></div>
+                <div className="absolute -bottom-6 w-1 h-1 bg-cyan-400 rounded-full"></div>
               )}
             </button>
           );

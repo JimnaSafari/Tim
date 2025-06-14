@@ -2,94 +2,138 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Users, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-react';
 
 const Dashboard = () => {
+  const [showBalance, setShowBalance] = React.useState(true);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+    <div className="min-h-screen bg-dark-gradient text-white p-4 pb-24">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-8 pt-12">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Good morning, John</h1>
-          <p className="text-gray-600">Welcome back to TIM</p>
+          <p className="text-gray-400 text-sm">Good morning</p>
+          <h1 className="text-xl font-medium text-white">John Doe</h1>
         </div>
-        <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center text-white font-semibold">
-          JD
+        <div className="w-12 h-12 rounded-full overflow-hidden">
+          <img 
+            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" 
+            alt="Profile" 
+            className="w-full h-full object-cover"
+          />
         </div>
       </div>
 
       {/* Balance Card */}
-      <Card className="gradient-primary p-6 mb-6 text-white border-0 shadow-lg">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <p className="text-blue-100 text-sm">Total Balance</p>
-            <h2 className="text-3xl font-bold">KES 12,500</h2>
+      <Card className="glassmorphism p-6 mb-6 border-0 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-400/20 to-purple-600/20 rounded-full blur-xl"></div>
+        <div className="relative z-10">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-gray-400 text-sm">Total Balance</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowBalance(!showBalance)}
+                  className="p-1 h-auto text-gray-400 hover:text-white"
+                >
+                  {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                </Button>
+              </div>
+              <h2 className="text-3xl font-bold text-white">
+                {showBalance ? 'KES 12,500' : '••••••'}
+              </h2>
+            </div>
+            <Button 
+              size="sm" 
+              className="gradient-primary text-white border-0 rounded-full px-4"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Add
+            </Button>
           </div>
-          <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
-            <Plus className="w-4 h-4 mr-1" />
-            Add Money
-          </Button>
-        </div>
-        <div className="flex justify-between">
-          <div>
-            <p className="text-blue-100 text-xs">Available</p>
-            <p className="text-lg font-semibold">KES 8,500</p>
-          </div>
-          <div>
-            <p className="text-blue-100 text-xs">Savings</p>
-            <p className="text-lg font-semibold">KES 4,000</p>
+          
+          <div className="flex justify-between mt-6">
+            <div>
+              <p className="text-gray-400 text-xs">Available</p>
+              <p className="text-lg font-semibold text-white">
+                {showBalance ? 'KES 8,500' : '••••••'}
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-400 text-xs">In Batches</p>
+              <p className="text-lg font-semibold text-white">
+                {showBalance ? 'KES 4,000' : '••••••'}
+              </p>
+            </div>
           </div>
         </div>
       </Card>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <Button className="gradient-secondary h-16 flex-col text-white border-0 shadow-lg hover:scale-105 transition-transform">
-          <Users className="w-6 h-6 mb-1" />
-          <span className="text-sm">Join Batch</span>
-        </Button>
-        <Button className="gradient-success h-16 flex-col text-white border-0 shadow-lg hover:scale-105 transition-transform">
-          <Plus className="w-6 h-6 mb-1" />
-          <span className="text-sm">Create Batch</span>
-        </Button>
+        <Card className="glassmorphism-dark p-4 border-0 hover:scale-105 transition-transform cursor-pointer">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 flex items-center justify-center">
+              <Users className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-white font-medium">Join Batch</p>
+              <p className="text-gray-400 text-xs">Enter invite code</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="glassmorphism-dark p-4 border-0 hover:scale-105 transition-transform cursor-pointer">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center">
+              <Plus className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-white font-medium">Create Batch</p>
+              <p className="text-gray-400 text-xs">Start new group</p>
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* Recent Activity */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">Recent Activity</h3>
+        <h3 className="text-lg font-semibold mb-4 text-white">Recent Activity</h3>
         <div className="space-y-3">
-          <Card className="p-4 bg-white border border-gray-100 shadow-sm">
+          <Card className="glassmorphism-dark p-4 border-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                  <ArrowDown className="w-5 h-5 text-green-600" />
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <ArrowDown className="w-5 h-5 text-green-400" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">Batch Payout Received</p>
-                  <p className="text-sm text-gray-500">From "Friends Circle" batch</p>
+                  <p className="font-medium text-white">Batch Payout</p>
+                  <p className="text-sm text-gray-400">From "Friends Circle"</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-green-600">+KES 5,000</p>
-                <p className="text-xs text-gray-500">2 hours ago</p>
+                <p className="font-semibold text-green-400">+KES 5,000</p>
+                <p className="text-xs text-gray-500">2h ago</p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-4 bg-white border border-gray-100 shadow-sm">
+          <Card className="glassmorphism-dark p-4 border-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                  <ArrowUp className="w-5 h-5 text-blue-600" />
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <ArrowUp className="w-5 h-5 text-blue-400" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">Monthly Contribution</p>
-                  <p className="text-sm text-gray-500">To "Work Colleagues" batch</p>
+                  <p className="font-medium text-white">Contribution</p>
+                  <p className="text-sm text-gray-400">To "Work Group"</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-red-600">-KES 1,100</p>
-                <p className="text-xs text-gray-500">1 day ago</p>
+                <p className="font-semibold text-red-400">-KES 1,100</p>
+                <p className="text-xs text-gray-500">1d ago</p>
               </div>
             </div>
           </Card>
@@ -98,51 +142,35 @@ const Dashboard = () => {
 
       {/* Active Batches */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">Active Batches</h3>
-        <div className="flex space-x-4 overflow-x-auto pb-2">
-          <Card className="min-w-[280px] p-4 bg-white border border-gray-100 shadow-sm">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <h4 className="font-semibold text-gray-900">Friends Circle</h4>
-                <p className="text-sm text-gray-500">8/10 members</p>
+        <h3 className="text-lg font-semibold mb-4 text-white">Your Batches</h3>
+        <div className="space-y-4">
+          <Card className="glassmorphism p-4 border-0 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-cyan-400/20 to-purple-600/20 rounded-full blur-lg"></div>
+            <div className="relative z-10">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h4 className="font-semibold text-white">Friends Circle</h4>
+                  <p className="text-sm text-gray-400">8/10 members</p>
+                </div>
+                <span className="bg-green-500/20 text-green-400 text-xs px-3 py-1 rounded-full border border-green-500/30">
+                  Active
+                </span>
               </div>
-              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Active</span>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Next payout</span>
-                <span className="text-sm font-medium">March 15</span>
+              
+              <div className="flex justify-between text-sm mb-3">
+                <div>
+                  <p className="text-gray-400">Your position</p>
+                  <p className="text-white font-medium">5th</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-gray-400">Next payout</p>
+                  <p className="text-white font-medium">Mar 15</p>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Your turn</span>
-                <span className="text-sm font-medium">5th position</span>
-              </div>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
-              <div className="bg-blue-600 h-2 rounded-full" style={{ width: '80%' }}></div>
-            </div>
-          </Card>
 
-          <Card className="min-w-[280px] p-4 bg-white border border-gray-100 shadow-sm">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <h4 className="font-semibold text-gray-900">Work Colleagues</h4>
-                <p className="text-sm text-gray-500">10/10 members</p>
+              <div className="w-full bg-gray-700/50 rounded-full h-2">
+                <div className="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: '80%' }}></div>
               </div>
-              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Running</span>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Next payout</span>
-                <span className="text-sm font-medium">April 1</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Your turn</span>
-                <span className="text-sm font-medium">2nd position</span>
-              </div>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
-              <div className="bg-blue-600 h-2 rounded-full" style={{ width: '30%' }}></div>
             </div>
           </Card>
         </div>
