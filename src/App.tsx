@@ -25,8 +25,16 @@ const queryClient = new QueryClient();
 function App() {
   const { user, loading } = useAuth();
 
+  const handleSplashComplete = () => {
+    // Splash screen completion is handled by the loading state
+  };
+
+  const handleAuthSuccess = () => {
+    // Auth success is handled by the useAuth hook automatically
+  };
+
   if (loading) {
-    return <SplashScreen />;
+    return <SplashScreen onComplete={handleSplashComplete} />;
   }
 
   return (
@@ -35,7 +43,7 @@ function App() {
         <div className="App">
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth" element={!user ? <Auth /> : <Navigate to="/dashboard" />} />
+            <Route path="/auth" element={!user ? <Auth onAuthSuccess={handleAuthSuccess} /> : <Navigate to="/dashboard" />} />
             <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/auth" />} />
             <Route path="/profile" element={user ? <Profile /> : <Navigate to="/auth" />} />
             <Route path="/batches" element={user ? <Batches /> : <Navigate to="/auth" />} />
@@ -48,7 +56,6 @@ function App() {
             <Route path="/settings" element={user ? <Settings /> : <Navigate to="/auth" />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          {user && <BottomNavigation />}
           <Toaster />
         </div>
       </Router>
