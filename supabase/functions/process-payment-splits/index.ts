@@ -30,6 +30,7 @@ serve(async (req) => {
       .single();
 
     if (configError) {
+      console.error('Config error:', configError);
       throw new Error('Failed to get routing configuration');
     }
 
@@ -64,6 +65,7 @@ serve(async (req) => {
       .insert(splits);
 
     if (splitsError) {
+      console.error('Splits error:', splitsError);
       throw new Error('Failed to create payment splits');
     }
 
@@ -90,7 +92,16 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         splits: splits.length,
-        message: 'Payment splits processed successfully'
+        message: 'Payment splits processed successfully',
+        splitDetails: {
+          serviceFee: serviceFeeAmount,
+          poolContribution: poolAmount,
+          destination: {
+            serviceFee: config.service_fee_mpesa_number,
+            poolMoney: poolDestination,
+            poolType: poolDestinationType
+          }
+        }
       }),
       { 
         headers: { 
@@ -103,7 +114,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error processing payment splits:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        success: false
+      }),
       { 
         status: 400, 
         headers: { 
