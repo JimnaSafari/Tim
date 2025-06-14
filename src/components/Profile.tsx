@@ -1,20 +1,47 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit3, Shield, FileText, Users, Moon, ChevronRight } from 'lucide-react';
+import { LogOut, Edit, User } from 'lucide-react';
+import { useUserData } from '@/hooks/useUserData';
+import { useAuth } from '@/hooks/useAuth';
+import EditProfileForm from './EditProfileForm';
 
 const Profile = () => {
+  const { userData, loading, refreshUserData } = useUserData();
+  const { signOut } = useAuth();
+  const [showEdit, setShowEdit] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-dark-gradient text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const name = userData?.profile?.full_name || 'User';
+  const email = userData?.profile?.email || userData?.email || 'unknown@email.com';
+
   return (
     <div className="min-h-screen bg-dark-gradient text-white p-4 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between mb-8 pt-12">
-        <Button variant="ghost" size="sm" className="text-white p-2">
-          <ArrowLeft className="w-5 h-5" />
+        <Button variant="ghost" size="sm" className="text-white p-2" aria-label="Back">
+          {/* You might want to add navigation logic here */}
+          <User className="w-5 h-5" />
         </Button>
         <h1 className="text-xl font-medium">Profile</h1>
-        <Button variant="ghost" size="sm" className="text-white p-2">
-          <Edit3 className="w-5 h-5" />
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-white p-2"
+          aria-label="Edit Profile"
+          onClick={() => setShowEdit(true)}
+        >
+          <Edit className="w-5 h-5" />
         </Button>
       </div>
 
@@ -29,8 +56,16 @@ const Profile = () => {
               className="w-full h-full object-cover"
             />
           </div>
-          <h2 className="text-xl font-semibold text-white mb-1">Mrs. Rosy Smith</h2>
-          <p className="text-gray-400 mb-4">RosySmith@gmail.com</p>
+          <h2 className="text-xl font-semibold text-white mb-1">{name}</h2>
+          <p className="text-gray-400 mb-2">{email}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-gray-600 text-gray-300 hover:text-white mt-3"
+            onClick={signOut}
+          >
+            <LogOut className="w-4 h-4 mr-2" /> Log out
+          </Button>
         </div>
       </Card>
 
@@ -124,6 +159,19 @@ const Profile = () => {
           </div>
         </Card>
       </div>
+
+      {/* Edit Profile Modal */}
+      {showEdit && (
+        <EditProfileForm
+          initialName={name}
+          initialEmail={email}
+          onClose={() => setShowEdit(false)}
+          onSuccess={() => {
+            setShowEdit(false);
+            refreshUserData();
+          }}
+        />
+      )}
     </div>
   );
 };
