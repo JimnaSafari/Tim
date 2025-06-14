@@ -7,9 +7,15 @@ import Loans from '@/components/Loans';
 import Profile from '@/components/Profile';
 import BottomNavigation from '@/components/BottomNavigation';
 import Chatbot from '@/components/Chatbot';
+import SplashScreen from '@/components/SplashScreen';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('home');
+  const [showSplash, setShowSplash] = useState(true);
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -27,6 +33,10 @@ const Index = () => {
         return <Dashboard />;
     }
   };
+
+  if (showSplash) {
+    return <SplashScreen onComplete={handleSplashComplete} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
