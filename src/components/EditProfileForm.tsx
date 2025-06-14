@@ -75,24 +75,44 @@ const EditProfileForm = ({
 
   const uploadAvatar = async (file: File, userId: string): Promise<string | null> => {
     try {
+      console.log('Starting avatar upload for user:', userId);
+      
       const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      const filePath = fileName;
 
-      const { error: uploadError } = await supabase.storage
+      console.log('Uploading to path:', filePath);
+
+      // Remove old avatar if it exists
+      if (initialAvatarUrl) {
+        const oldFileName = initialAvatarUrl.split('/').pop();
+        if (oldFileName) {
+          await supabase.storage
+            .from('avatars')
+            .remove([oldFileName]);
+        }
+      }
+
+      const { error: uploadError, data } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file, { 
+          cacheControl: '3600',
+          upsert: true 
+        });
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
-        return null;
+        throw uploadError;
       }
 
-      const { data } = supabase.storage
+      console.log('Upload successful:', data);
+
+      const { data: urlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      return data.publicUrl;
+      console.log('Public URL generated:', urlData.publicUrl);
+      return urlData.publicUrl;
     } catch (error) {
       console.error('Avatar upload error:', error);
       return null;
