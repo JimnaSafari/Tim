@@ -9,6 +9,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const batchRoutes = require('./routes/batches');
 const savingsRoutes = require('./routes/savings');
+const mpesaRoutes = require('./routes/mpesa');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -50,6 +51,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/batches', batchRoutes);
 app.use('/api/savings', savingsRoutes);
+app.use('/api/mpesa', mpesaRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
