@@ -40,56 +40,55 @@ serve(async (req) => {
       .eq('id', user.id)
       .single();
 
-    // Get user's savings balance
-    const { data: savingsData } = await supabase
+    // Get user batches
+    const { data: batches } = await supabase
+      .from('batches')
+      .select(`
+        *,
+        batch_members!inner(position, joined_at)
+      `)
+      .eq('batch_members.user_id', user.id);
+
+    // Get user savings transactions
+    const { data: savings } = await supabase
       .from('savings')
-      .select('amount, transaction_type, created_at, description')
+      .select('*')
       .eq('user_id', user.id)
-      .eq('status', 'completed')
       .order('created_at', { ascending: false });
 
-    const balance = savingsData?.reduce((total, transaction) => {
+    // Calculate savings balance
+    const savingsBalance = savings?.reduce((total, transaction) => {
       return transaction.transaction_type === 'deposit' 
         ? total + Number(transaction.amount)
         : total - Number(transaction.amount);
     }, 0) || 0;
 
-    // Get user's batches
-    const { data: userBatches } = await supabase
-      .from('batch_members')
-      .select(`
-        batch_id,
-        position,
-        payout_date,
-        has_received_payout,
-        joined_at,
-        batches (
-          id,
-          name,
-          description,
-          monthly_contribution,
-          max_members,
-          current_members,
-          status,
-          invite_code,
-          created_at
-        )
-      `)
-      .eq('user_id', user.id);
+    // Calculate monthly total (current month deposits)
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const monthlyTotal = savings?.filter(transaction => {
+      const transactionDate = new Date(transaction.created_at);
+      return transaction.transaction_type === 'deposit' &&
+             transactionDate.getMonth() === currentMonth &&
+             transactionDate.getFullYear() === currentYear;
+    }).reduce((total, transaction) => total + Number(transaction.amount), 0) || 0;
 
-    // Get recent transactions (last 5)
-    const recentTransactions = savingsData?.slice(0, 5) || [];
+    // Get recent savings (last 10 transactions)
+    const recentSavings = savings?.slice(0, 10) || [];
+
+    const userData = {
+      profile,
+      batches: batches || [],
+      savingsBalance,
+      monthlyTotal,
+      recentSavings,
+      totalSavings: savings?.length || 0
+    };
 
     console.log('User data fetched successfully');
 
     return new Response(
-      JSON.stringify({
-        profile,
-        balance,
-        batches: userBatches,
-        recentTransactions,
-        savingsHistory: savingsData
-      }),
+      JSON.stringify(userData),
       { 
         headers: { 
           ...corsHeaders, 

@@ -3,20 +3,48 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, PiggyBank, ArrowUp, ArrowDown, Clock, Eye, EyeOff } from 'lucide-react';
+import SaveMoneyForm from './SaveMoneyForm';
+import { useUserData } from '@/hooks/useUserData';
+import { useSavings } from '@/hooks/useSavings';
 
 const Savings = () => {
   const [showBalance, setShowBalance] = useState(true);
   const [withdrawalAmount, setWithdrawalAmount] = useState('');
   const [showWithdrawalForm, setShowWithdrawalForm] = useState(false);
+  const [showSaveForm, setShowSaveForm] = useState(false);
+  const { userData, loading, refreshUserData } = useUserData();
+  const { withdraw, loading: withdrawLoading } = useSavings();
 
-  const handleWithdrawalRequest = () => {
+  const handleWithdrawalRequest = async () => {
     if (withdrawalAmount) {
-      console.log('Withdrawal request submitted:', withdrawalAmount);
-      setShowWithdrawalForm(false);
-      setWithdrawalAmount('');
-      // Here you would integrate with backend to process withdrawal request
+      try {
+        await withdraw(Number(withdrawalAmount), 'Manual withdrawal request');
+        setShowWithdrawalForm(false);
+        setWithdrawalAmount('');
+        refreshUserData();
+      } catch (error) {
+        console.error('Withdrawal error:', error);
+      }
     }
   };
+
+  const handleSaveSuccess = () => {
+    refreshUserData();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-dark-gradient text-white p-4 pb-24 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading your savings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const totalBalance = userData?.savingsBalance || 0;
+  const recentTransactions = userData?.recentSavings || [];
 
   return (
     <div className="min-h-screen bg-dark-gradient text-white p-4 pb-24">
@@ -48,7 +76,7 @@ const Savings = () => {
                 </Button>
               </div>
               <h2 className="text-3xl font-bold text-white">
-                {showBalance ? 'KES 15,750' : '••••••'}
+                {showBalance ? `KES ${totalBalance.toLocaleString()}` : '••••••'}
               </h2>
             </div>
           </div>
@@ -57,13 +85,13 @@ const Savings = () => {
             <div>
               <p className="text-gray-400 text-xs">Available</p>
               <p className="text-lg font-semibold text-white">
-                {showBalance ? 'KES 15,750' : '••••••'}
+                {showBalance ? `KES ${totalBalance.toLocaleString()}` : '••••••'}
               </p>
             </div>
             <div>
               <p className="text-gray-400 text-xs">This Month</p>
               <p className="text-lg font-semibold text-green-400">
-                {showBalance ? '+KES 2,500' : '••••••'}
+                {showBalance ? `+KES ${userData?.monthlyTotal || 0}` : '••••••'}
               </p>
             </div>
           </div>
@@ -72,7 +100,10 @@ const Savings = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <Card className="glassmorphism-dark p-4 border-0 hover:scale-105 transition-transform cursor-pointer">
+        <Card 
+          className="glassmorphism-dark p-4 border-0 hover:scale-105 transition-transform cursor-pointer"
+          onClick={() => setShowSaveForm(true)}
+        >
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 flex items-center justify-center">
               <ArrowUp className="w-5 h-5 text-white" />
@@ -116,7 +147,7 @@ const Savings = () => {
                 onChange={(e) => setWithdrawalAmount(e.target.value)}
                 className="w-full p-3 rounded-lg bg-gray-800/50 border border-gray-600 text-white"
                 placeholder="Enter amount"
-                max="15750"
+                max={totalBalance}
               />
             </div>
             <div className="flex gap-3">
@@ -124,83 +155,87 @@ const Savings = () => {
                 variant="outline" 
                 onClick={() => setShowWithdrawalForm(false)}
                 className="flex-1 border-gray-600 text-gray-300"
+                disabled={withdrawLoading}
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleWithdrawalRequest}
                 className="flex-1 gradient-primary text-white"
-                disabled={!withdrawalAmount}
+                disabled={!withdrawalAmount || withdrawLoading || Number(withdrawalAmount) > totalBalance}
               >
-                Request
+                {withdrawLoading ? 'Processing...' : 'Request'}
               </Button>
             </div>
           </Card>
         </div>
       )}
 
-      {/* Pending Withdrawals */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4 text-white">Pending Requests</h3>
-        <Card className="glassmorphism-dark p-4 border-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-orange-400" />
-              </div>
-              <div>
-                <p className="font-medium text-white">Withdrawal Request</p>
-                <p className="text-sm text-gray-400">KES 5,000 • 24 hours remaining</p>
-              </div>
-            </div>
-            <span className="bg-orange-500/20 text-orange-400 text-xs px-3 py-1 rounded-full border border-orange-500/30">
-              Processing
-            </span>
-          </div>
-        </Card>
-      </div>
-
       {/* Savings History */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-4 text-white">Recent Activity</h3>
-        <div className="space-y-3">
-          <Card className="glassmorphism-dark p-4 border-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                  <ArrowUp className="w-5 h-5 text-green-400" />
+        {recentTransactions.length > 0 ? (
+          <div className="space-y-3">
+            {recentTransactions.map((transaction: any, index: number) => (
+              <Card key={transaction.id || index} className="glassmorphism-dark p-4 border-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-10 h-10 rounded-full ${
+                      transaction.transaction_type === 'deposit'
+                        ? 'bg-green-500/20'
+                        : 'bg-red-500/20'
+                    } flex items-center justify-center`}>
+                      {transaction.transaction_type === 'deposit' ? (
+                        <ArrowUp className="w-5 h-5 text-green-400" />
+                      ) : (
+                        <ArrowDown className="w-5 h-5 text-red-400" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-white">
+                        {transaction.transaction_type === 'deposit' ? 'Deposit' : 'Withdrawal'}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {transaction.description || 'No description'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-semibold ${
+                      transaction.transaction_type === 'deposit' ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {transaction.transaction_type === 'deposit' ? '+' : '-'}KES {transaction.amount}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(transaction.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-white">Auto Save</p>
-                  <p className="text-sm text-gray-400">From payout</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-green-400">+KES 2,500</p>
-                <p className="text-xs text-gray-500">2d ago</p>
-              </div>
-            </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="glassmorphism-dark p-8 border-0 text-center">
+            <PiggyBank className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+            <h4 className="text-lg font-semibold text-white mb-2">No Transactions Yet</h4>
+            <p className="text-gray-400 mb-4">Start saving money to see your transaction history</p>
+            <Button 
+              className="gradient-primary text-white"
+              onClick={() => setShowSaveForm(true)}
+            >
+              Save Your First Amount
+            </Button>
           </Card>
-
-          <Card className="glassmorphism-dark p-4 border-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                  <ArrowDown className="w-5 h-5 text-red-400" />
-                </div>
-                <div>
-                  <p className="font-medium text-white">Withdrawal</p>
-                  <p className="text-sm text-gray-400">To M-PESA</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-red-400">-KES 3,000</p>
-                <p className="text-xs text-gray-500">1w ago</p>
-              </div>
-            </div>
-          </Card>
-        </div>
+        )}
       </div>
+
+      {/* Save Money Form */}
+      {showSaveForm && (
+        <SaveMoneyForm
+          onClose={() => setShowSaveForm(false)}
+          onSuccess={handleSaveSuccess}
+        />
+      )}
     </div>
   );
 };
