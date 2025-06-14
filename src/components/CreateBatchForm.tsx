@@ -31,18 +31,26 @@ const CreateBatchForm = ({ onClose, onSuccess }: CreateBatchFormProps) => {
       return;
     }
 
+    const maxMembersNum = Number(formData.maxMembers);
+    if (maxMembersNum < 2 || maxMembersNum > 20) {
+      toast.error('Maximum members must be between 2 and 20');
+      return;
+    }
+
     try {
       await createBatch({
         name: formData.name,
         description: formData.description,
         monthlyContribution: Number(formData.monthlyContribution),
-        maxMembers: Number(formData.maxMembers)
+        maxMembers: maxMembersNum
       });
       
+      toast.success('Batch created successfully!');
       onSuccess();
       onClose();
     } catch (error) {
       console.error('Error creating batch:', error);
+      toast.error('Failed to create batch. Please try again.');
     }
   };
 
@@ -98,16 +106,18 @@ const CreateBatchForm = ({ onClose, onSuccess }: CreateBatchFormProps) => {
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm mb-2">Maximum Members</label>
+            <label className="block text-gray-300 text-sm mb-2">Maximum Members (2-20) *</label>
             <Input
               type="number"
               value={formData.maxMembers}
               onChange={(e) => setFormData({ ...formData, maxMembers: e.target.value })}
               placeholder="10"
               className="bg-gray-800/50 border-gray-600 text-white"
+              required
               min="2"
-              max="50"
+              max="20"
             />
+            <p className="text-xs text-gray-500 mt-1">Minimum 2 members, maximum 20 members allowed</p>
           </div>
 
           <div className="flex gap-3 pt-4">

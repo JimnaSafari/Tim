@@ -51,22 +51,22 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-dark-gradient text-white p-4 pb-24">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8 pt-12 animate-fade-in">
-        <div className="text-center flex-1">
-          <p className="text-gray-400 text-sm">{getGreeting()}</p>
-          <h1 className="text-xl font-medium text-white">{userName}</h1>
-        </div>
-        <div className="w-12 h-12 rounded-full overflow-hidden hover-lift">
-          <Avatar className="w-12 h-12">
+      {/* Header - Centered Profile */}
+      <div className="flex flex-col items-center mb-8 pt-12 animate-fade-in">
+        <div className="w-16 h-16 rounded-full overflow-hidden hover-lift mb-4">
+          <Avatar className="w-16 h-16">
             <AvatarImage 
               src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" 
               alt={userName}
             />
-            <AvatarFallback className="bg-gradient-to-br from-cyan-400 to-purple-600 text-white font-semibold">
+            <AvatarFallback className="bg-gradient-to-br from-cyan-400 to-purple-600 text-white font-semibold text-lg">
               {userInitials}
             </AvatarFallback>
           </Avatar>
+        </div>
+        <div className="text-center">
+          <p className="text-gray-400 text-sm">{getGreeting()}</p>
+          <h1 className="text-xl font-medium text-white">{userName}</h1>
         </div>
       </div>
 
