@@ -7,7 +7,7 @@ interface SplashScreenProps {
 
 const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
   const [currentLetter, setCurrentLetter] = useState(0);
-  const letters = ['T', 'I', 'M'];
+  const letters = ['T', 'i', 'M'];
 
   useEffect(() => {
     const timer = setTimeout(() => {
