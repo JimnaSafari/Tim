@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { FileText, ChevronRight, Moon, Shield, Users } from 'lucide-react';
+import { FileText, ChevronRight, Moon, Shield, Users, Settings } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 
 const ProfileMenuItems = () => {
@@ -48,14 +48,23 @@ const ProfileMenuItems = () => {
         </div>
       </Card>
 
-      <Card className="glassmorphism-dark p-4 border-0">
+      <Card 
+        className="glassmorphism-dark p-4 border-0 cursor-pointer hover:brightness-125 transition"
+        onClick={() => navigate("/settings")}
+        tabIndex={0}
+        role="button"
+        aria-label="Open settings"
+        onKeyDown={e => {
+          if (e.key === "Enter" || e.key === " ") navigate("/settings");
+        }}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-orange-400" />
+              <Settings className="w-5 h-5 text-orange-400" />
             </div>
             <div>
-              <p className="font-medium text-white">Security</p>
+              <p className="font-medium text-white">Settings</p>
             </div>
           </div>
           <ChevronRight className="w-5 h-5 text-gray-400" />
