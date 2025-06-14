@@ -1,10 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, DollarSign, Clock, FileText, X, ChevronRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import BatchAgreement from './BatchAgreement';
 
@@ -14,48 +13,8 @@ interface BatchDetailsProps {
 }
 
 const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
-  const [payoutSchedule, setPayoutSchedule] = useState<any[]>([]);
-  const [weeklyContributions, setWeeklyContributions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showAgreement, setShowAgreement] = useState(false);
-
-  useEffect(() => {
-    fetchBatchDetails();
-  }, [batch.id]);
-
-  const fetchBatchDetails = async () => {
-    try {
-      // For now, we'll use mock data since the new tables might not be in the types yet
-      // This will be replaced with actual queries once the database is fully synced
-      
-      // Mock payout schedule
-      const mockPayoutSchedule = batch.batch_members?.map((member: any, index: number) => ({
-        week_number: index + 1,
-        member_name: member.profiles?.full_name || `Member ${index + 1}`,
-        payout_amount: (batch.monthly_contribution || 1000) * batch.max_members,
-        payout_date: new Date(Date.now() + (index * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
-        is_paid: false
-      })) || [];
-
-      // Mock weekly contributions
-      const mockContributions = batch.batch_members?.flatMap((member: any, memberIndex: number) => 
-        Array.from({ length: batch.max_members }, (_, weekIndex) => ({
-          week_number: weekIndex + 1,
-          member_name: member.profiles?.full_name || `Member ${memberIndex + 1}`,
-          amount_due: (batch.monthly_contribution || 1000) + 100, // contribution + service fee
-          status: weekIndex === 0 ? 'paid' : 'pending'
-        }))
-      ) || [];
-
-      setPayoutSchedule(mockPayoutSchedule);
-      setWeeklyContributions(mockContributions);
-    } catch (error) {
-      console.error('Error fetching batch details:', error);
-      toast.error('Failed to load batch details');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -66,11 +25,21 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
     }
   };
 
-  const currentWeek = 1; // This would come from batch.current_week once available
+  // Mock data based on batch information
+  const currentWeek = 1;
   const weeklyContribution = batch.monthly_contribution || 1000;
   const serviceFee = 100;
   const totalWeeklyPayment = weeklyContribution + serviceFee;
   const totalPayout = weeklyContribution * batch.max_members;
+
+  // Generate mock payout schedule
+  const payoutSchedule = batch.batch_members?.map((member: any, index: number) => ({
+    week_number: index + 1,
+    member_name: member.profiles?.full_name || `Member ${index + 1}`,
+    payout_amount: totalPayout,
+    payout_date: new Date(Date.now() + (index * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+    is_paid: false
+  })) || [];
 
   if (loading) {
     return (
