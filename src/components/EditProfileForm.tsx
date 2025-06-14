@@ -1,10 +1,8 @@
-
 import React, { useState } from "react";
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-// FIX: import the toast method from the correct file.
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { X } from "lucide-react";
 
