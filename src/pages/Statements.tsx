@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import jsPDF from 'jspdf';
 
 const Statements = () => {
   const { userData, loading } = useUserData();
@@ -31,17 +32,138 @@ const Statements = () => {
   }
 
   const handleDownloadStatement = (type: string) => {
-    // Simple implementation - in real app, this would generate and download actual statements
-    const blob = new Blob([`${type} Statement - Generated on ${new Date().toLocaleDateString()}`], 
-      { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${type.toLowerCase()}-statement-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const doc = new jsPDF();
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    // Set up the PDF document
+    doc.setFontSize(20);
+    doc.text(`${type} Statement`, 20, 30);
+    
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${formattedDate}`, 20, 45);
+    doc.text(`Account Holder: ${userData?.profile?.full_name || 'N/A'}`, 20, 55);
+    doc.text(`Phone: ${userData?.profile?.phone_number || 'N/A'}`, 20, 65);
+
+    let yPosition = 85;
+
+    if (type === 'Savings') {
+      doc.setFontSize(16);
+      doc.text('Savings Summary', 20, yPosition);
+      yPosition += 15;
+
+      doc.setFontSize(12);
+      doc.text(`Current Savings Balance: ${formatCurrency(userData?.savingsBalance || 0)}`, 20, yPosition);
+      yPosition += 10;
+      doc.text(`Total Savings: ${formatCurrency(userData?.totalSavings || 0)}`, 20, yPosition);
+      yPosition += 10;
+      doc.text(`This Month: ${formatCurrency(userData?.monthlyTotal || 0)}`, 20, yPosition);
+      yPosition += 20;
+
+      if (userData?.recentSavings && userData.recentSavings.length > 0) {
+        doc.setFontSize(14);
+        doc.text('Recent Transactions', 20, yPosition);
+        yPosition += 15;
+
+        doc.setFontSize(10);
+        doc.text('Date', 20, yPosition);
+        doc.text('Type', 70, yPosition);
+        doc.text('Amount', 120, yPosition);
+        yPosition += 10;
+
+        userData.recentSavings.forEach((transaction: any) => {
+          const date = new Date(transaction.created_at).toLocaleDateString();
+          const amount = `${transaction.transaction_type === 'deposit' ? '+' : '-'}${formatCurrency(Number(transaction.amount))}`;
+          
+          doc.text(date, 20, yPosition);
+          doc.text(transaction.transaction_type, 70, yPosition);
+          doc.text(amount, 120, yPosition);
+          yPosition += 8;
+
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        });
+      }
+    } else if (type === 'Transaction') {
+      doc.setFontSize(16);
+      doc.text('Transaction Report', 20, yPosition);
+      yPosition += 15;
+
+      doc.setFontSize(12);
+      doc.text(`Report Period: ${formattedDate}`, 20, yPosition);
+      yPosition += 10;
+      doc.text(`Total Transactions: ${userData?.recentSavings?.length || 0}`, 20, yPosition);
+      yPosition += 20;
+
+      if (userData?.recentSavings && userData.recentSavings.length > 0) {
+        doc.setFontSize(10);
+        doc.text('Date', 20, yPosition);
+        doc.text('Type', 60, yPosition);
+        doc.text('Description', 100, yPosition);
+        doc.text('Amount', 150, yPosition);
+        yPosition += 10;
+
+        userData.recentSavings.forEach((transaction: any) => {
+          const date = new Date(transaction.created_at).toLocaleDateString();
+          const amount = `${transaction.transaction_type === 'deposit' ? '+' : '-'}${formatCurrency(Number(transaction.amount))}`;
+          
+          doc.text(date, 20, yPosition);
+          doc.text(transaction.transaction_type, 60, yPosition);
+          doc.text(transaction.description || 'N/A', 100, yPosition);
+          doc.text(amount, 150, yPosition);
+          yPosition += 8;
+
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        });
+      }
+    } else if (type === 'Monthly') {
+      doc.setFontSize(16);
+      doc.text('Monthly Summary', 20, yPosition);
+      yPosition += 15;
+
+      const currentMonth = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      doc.setFontSize(12);
+      doc.text(`Month: ${currentMonth}`, 20, yPosition);
+      yPosition += 10;
+      doc.text(`Monthly Contribution: ${formatCurrency(userData?.monthlyTotal || 0)}`, 20, yPosition);
+      yPosition += 10;
+      doc.text(`Current Balance: ${formatCurrency(userData?.savingsBalance || 0)}`, 20, yPosition);
+      yPosition += 20;
+
+      // Add batch information if available
+      if (userData?.batches && userData.batches.length > 0) {
+        doc.setFontSize(14);
+        doc.text('Active Batches', 20, yPosition);
+        yPosition += 15;
+
+        userData.batches.forEach((batch: any) => {
+          doc.setFontSize(10);
+          doc.text(`Batch: ${batch.name}`, 20, yPosition);
+          yPosition += 8;
+          doc.text(`Monthly Contribution: ${formatCurrency(batch.monthly_contribution)}`, 20, yPosition);
+          yPosition += 8;
+          doc.text(`Members: ${batch.current_members}/${batch.max_members}`, 20, yPosition);
+          yPosition += 12;
+
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        });
+      }
+    }
+
+    // Save the PDF
+    doc.save(`${type.toLowerCase()}-statement-${today.toISOString().split('T')[0]}.pdf`);
   };
 
   const formatCurrency = (amount: number) => {
