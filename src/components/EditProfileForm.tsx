@@ -2,10 +2,12 @@
 import React, { useState } from "react";
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { supabase } from "@/integrations/supabase/client";
-import { X, Upload, User } from "lucide-react";
+import { X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import AvatarUpload from './EditProfileForm/AvatarUpload';
+import ProfileFormFields from './EditProfileForm/ProfileFormFields';
+import { useAvatarUpload } from './EditProfileForm/AvatarUploadLogic';
 
 interface EditProfileFormProps {
   initialName: string;
@@ -24,68 +26,10 @@ const EditProfileForm = ({
 }: EditProfileFormProps) => {
   const [name, setName] = useState(initialName || "");
   const [email, setEmail] = useState(initialEmail || "");
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(initialAvatarUrl || null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setAvatarPreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const uploadAvatar = async (file: File, userId: string): Promise<string | null> => {
-    try {
-      console.log('Starting avatar upload for user:', userId);
-      
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
-      const filePath = fileName;
-
-      console.log('Uploading to path:', filePath);
-
-      // Remove old avatar if it exists
-      if (initialAvatarUrl) {
-        const oldFileName = initialAvatarUrl.split('/').pop();
-        if (oldFileName) {
-          await supabase.storage
-            .from('avatars')
-            .remove([oldFileName]);
-        }
-      }
-
-      const { error: uploadError, data } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { 
-          cacheControl: '3600',
-          upsert: true 
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
-      }
-
-      console.log('Upload successful:', data);
-
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      console.log('Public URL generated:', urlData.publicUrl);
-      return urlData.publicUrl;
-    } catch (error) {
-      console.error('Avatar upload error:', error);
-      return null;
-    }
-  };
+  
+  const { avatarFile, avatarPreview, handleAvatarChange, uploadAvatar } = useAvatarUpload(initialAvatarUrl);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,59 +120,20 @@ const EditProfileForm = ({
         </button>
         <h3 className="text-lg font-semibold text-white mb-6">Edit Profile</h3>
         <form onSubmit={handleUpdate} className="space-y-5">
-          {/* Avatar Upload Section */}
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
-                {avatarPreview ? (
-                  <img 
-                    src={avatarPreview} 
-                    alt="Profile preview" 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-8 h-8 text-gray-400" />
-                )}
-              </div>
-              <label 
-                htmlFor="avatar-upload"
-                className="absolute -bottom-1 -right-1 w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-cyan-600 transition-colors"
-              >
-                <Upload className="w-4 h-4 text-white" />
-              </label>
-              <input
-                id="avatar-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                className="hidden"
-                disabled={loading}
-              />
-            </div>
-            <p className="text-gray-400 text-sm">Click the icon to upload a new picture</p>
-          </div>
+          <AvatarUpload
+            avatarPreview={avatarPreview}
+            onAvatarChange={handleAvatarChange}
+            loading={loading}
+          />
 
-          <div>
-            <label className="block text-gray-300 mb-1">Full Name</label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-white"
-              disabled={loading}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-gray-300 mb-1">Email</label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-white"
-              disabled={loading}
-              required
-            />
-          </div>
+          <ProfileFormFields
+            name={name}
+            email={email}
+            onNameChange={setName}
+            onEmailChange={setEmail}
+            loading={loading}
+          />
+
           <div className="flex gap-2 pt-2">
             <Button
               type="button"
