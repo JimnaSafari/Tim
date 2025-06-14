@@ -1,8 +1,9 @@
+
 import React, { useState } from "react";
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { X } from "lucide-react";
 
@@ -22,7 +23,6 @@ const EditProfileForm = ({
   const [name, setName] = useState(initialName || "");
   const [email, setEmail] = useState(initialEmail || "");
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast(); // Use the toast hook
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
