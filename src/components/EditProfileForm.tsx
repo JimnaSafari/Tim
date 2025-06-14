@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import { X, Upload, User } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface EditProfileFormProps {
   initialName: string;
@@ -13,40 +14,6 @@ interface EditProfileFormProps {
   onClose: () => void;
   onSuccess: () => void;
 }
-
-// Simple toast function to avoid any import issues
-const showToast = (title: string, description: string, variant: 'default' | 'destructive' = 'default') => {
-  const toastEl = document.createElement('div');
-  toastEl.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg max-w-sm transition-all duration-300 ${
-    variant === 'destructive' 
-      ? 'bg-red-600 text-white border border-red-700' 
-      : 'bg-green-600 text-white border border-green-700'
-  }`;
-  
-  toastEl.innerHTML = `
-    <div class="font-medium">${title}</div>
-    <div class="text-sm opacity-90 mt-1">${description}</div>
-  `;
-  
-  document.body.appendChild(toastEl);
-  
-  setTimeout(() => {
-    toastEl.style.transform = 'translateX(0)';
-    toastEl.style.opacity = '1';
-  }, 10);
-  
-  setTimeout(() => {
-    if (document.body.contains(toastEl)) {
-      toastEl.style.transform = 'translateX(100%)';
-      toastEl.style.opacity = '0';
-      setTimeout(() => {
-        if (document.body.contains(toastEl)) {
-          document.body.removeChild(toastEl);
-        }
-      }, 300);
-    }
-  }, 3000);
-};
 
 const EditProfileForm = ({
   initialName,
@@ -60,6 +27,7 @@ const EditProfileForm = ({
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(initialAvatarUrl || null);
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -179,15 +147,18 @@ const EditProfileForm = ({
         throw emailError;
       }
 
-      showToast("Profile updated!", "Your info was updated successfully.", "default");
+      toast({
+        title: "Profile updated!",
+        description: "Your info was updated successfully.",
+      });
       onSuccess();
     } catch (err: any) {
       console.error('Update failed:', err);
-      showToast(
-        "Update failed",
-        err?.message || "Unable to update profile.",
-        "destructive"
-      );
+      toast({
+        title: "Update failed",
+        description: err?.message || "Unable to update profile.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
