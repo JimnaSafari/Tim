@@ -259,6 +259,8 @@ export type Database = {
           full_name: string | null
           id: string
           phone_number: string | null
+          phone_verified: boolean | null
+          preferred_reminder_method: string | null
           updated_at: string | null
         }
         Insert: {
@@ -267,6 +269,8 @@ export type Database = {
           full_name?: string | null
           id: string
           phone_number?: string | null
+          phone_verified?: boolean | null
+          preferred_reminder_method?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -275,6 +279,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone_number?: string | null
+          phone_verified?: boolean | null
+          preferred_reminder_method?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -323,6 +329,110 @@ export type Database = {
             columns: ["referrer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminder_logs: {
+        Row: {
+          batch_id: string
+          created_at: string | null
+          delivered_at: string | null
+          delivery_method: string
+          error_message: string | null
+          id: string
+          member_id: string
+          message_content: string
+          phone_number: string
+          reminder_type: string
+          sent_at: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string | null
+          delivered_at?: string | null
+          delivery_method: string
+          error_message?: string | null
+          id?: string
+          member_id: string
+          message_content: string
+          phone_number: string
+          reminder_type: string
+          sent_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string | null
+          delivered_at?: string | null
+          delivery_method?: string
+          error_message?: string | null
+          id?: string
+          member_id?: string
+          message_content?: string
+          phone_number?: string
+          reminder_type?: string
+          sent_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_logs_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminder_logs_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminder_schedules: {
+        Row: {
+          batch_id: string
+          created_at: string | null
+          day_of_week: number | null
+          id: string
+          is_active: boolean | null
+          reminder_type: string
+          time_of_day: string
+          updated_at: string | null
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: string
+          is_active?: boolean | null
+          reminder_type: string
+          time_of_day?: string
+          updated_at?: string | null
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: string
+          is_active?: boolean | null
+          reminder_type?: string
+          time_of_day?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_schedules_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
             referencedColumns: ["id"]
           },
         ]
