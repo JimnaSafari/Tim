@@ -99,10 +99,71 @@ export const useBatches = () => {
     }
   };
 
+  const updateContributionStatus = async (contributionId: string, status: 'pending' | 'paid' | 'overdue') => {
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Please log in to update contribution status');
+      }
+
+      const { error } = await supabase
+        .from('weekly_contributions')
+        .update({ 
+          status, 
+          payment_date: status === 'paid' ? new Date().toISOString() : null,
+          amount_paid: status === 'paid' ? 'amount_due' : 0
+        })
+        .eq('id', contributionId);
+
+      if (error) throw error;
+
+      toast.success('Contribution status updated successfully');
+    } catch (error: any) {
+      console.error('Error updating contribution status:', error);
+      toast.error(error.message || 'Failed to update contribution status');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markPayoutAsPaid = async (payoutId: string) => {
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Please log in to mark payout as paid');
+      }
+
+      const { error } = await supabase
+        .from('payout_schedules')
+        .update({ 
+          is_paid: true,
+          payment_date: new Date().toISOString()
+        })
+        .eq('id', payoutId);
+
+      if (error) throw error;
+
+      toast.success('Payout marked as paid successfully');
+    } catch (error: any) {
+      console.error('Error marking payout as paid:', error);
+      toast.error(error.message || 'Failed to mark payout as paid');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     createBatch,
     joinBatch,
     generateAgreement,
+    updateContributionStatus,
+    markPayoutAsPaid,
     loading
   };
 };

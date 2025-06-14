@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, DollarSign, Clock, FileText, X, ChevronRight } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import BatchAgreement from './BatchAgreement';
 
@@ -13,8 +14,59 @@ interface BatchDetailsProps {
 }
 
 const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
-  const [loading, setLoading] = useState(false);
+  const [payoutSchedule, setPayoutSchedule] = useState<any[]>([]);
+  const [weeklyContributions, setWeeklyContributions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showAgreement, setShowAgreement] = useState(false);
+
+  useEffect(() => {
+    fetchBatchDetails();
+  }, [batch.id]);
+
+  const fetchBatchDetails = async () => {
+    try {
+      // Fetch payout schedule
+      const { data: payoutData, error: payoutError } = await supabase
+        .from('payout_schedules')
+        .select(`
+          *,
+          profiles:member_id (
+            full_name
+          )
+        `)
+        .eq('batch_id', batch.id)
+        .order('week_number');
+
+      if (payoutError) {
+        console.error('Error fetching payout schedule:', payoutError);
+      } else {
+        setPayoutSchedule(payoutData || []);
+      }
+
+      // Fetch weekly contributions for current week
+      const { data: contributionsData, error: contributionsError } = await supabase
+        .from('weekly_contributions')
+        .select(`
+          *,
+          profiles:member_id (
+            full_name
+          )
+        `)
+        .eq('batch_id', batch.id)
+        .order('week_number, member_id');
+
+      if (contributionsError) {
+        console.error('Error fetching contributions:', contributionsError);
+      } else {
+        setWeeklyContributions(contributionsData || []);
+      }
+    } catch (error) {
+      console.error('Error fetching batch details:', error);
+      toast.error('Failed to load batch details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -25,21 +77,22 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
     }
   };
 
-  // Mock data based on batch information
-  const currentWeek = 1;
-  const weeklyContribution = batch.monthly_contribution || 1000;
-  const serviceFee = 100;
+  // Use actual batch data or fallback to mock data
+  const currentWeek = batch.current_week || 1;
+  const weeklyContribution = batch.weekly_contribution || batch.monthly_contribution || 1000;
+  const serviceFee = batch.service_fee_per_member || 100;
   const totalWeeklyPayment = weeklyContribution + serviceFee;
   const totalPayout = weeklyContribution * batch.max_members;
 
-  // Generate mock payout schedule
-  const payoutSchedule = batch.batch_members?.map((member: any, index: number) => ({
-    week_number: index + 1,
-    member_name: member.profiles?.full_name || `Member ${index + 1}`,
-    payout_amount: totalPayout,
-    payout_date: new Date(Date.now() + (index * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
-    is_paid: false
-  })) || [];
+  // Use actual payout schedule or generate mock if empty
+  const displayPayoutSchedule = payoutSchedule.length > 0 ? payoutSchedule : 
+    batch.batch_members?.map((member: any, index: number) => ({
+      week_number: index + 1,
+      member_name: member.profiles?.full_name || `Member ${index + 1}`,
+      payout_amount: totalPayout,
+      payout_date: new Date(Date.now() + (index * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+      is_paid: false
+    })) || [];
 
   if (loading) {
     return (
@@ -96,7 +149,7 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
               <Calendar className="w-8 h-8 text-purple-400" />
               <div>
                 <p className="text-gray-400 text-sm">Current Week</p>
-                <p className="text-white font-semibold">{currentWeek} of {batch.max_members}</p>
+                <p className="text-white font-semibold">{currentWeek} of {batch.total_weeks || batch.max_members}</p>
               </div>
             </div>
           </Card>
@@ -153,7 +206,7 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
         <Card className="glassmorphism-dark p-4 mb-6 border-0">
           <h4 className="text-lg font-semibold text-white mb-3">Payout Schedule</h4>
           <div className="space-y-2 max-h-60 overflow-y-auto">
-            {payoutSchedule.map((payout, index) => (
+            {displayPayoutSchedule.map((payout, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-800/50 rounded">
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
@@ -162,7 +215,9 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
                     {payout.week_number}
                   </div>
                   <div>
-                    <p className="text-white font-medium">{payout.member_name}</p>
+                    <p className="text-white font-medium">
+                      {payout.profiles?.full_name || payout.member_name || `Member ${index + 1}`}
+                    </p>
                     <p className="text-gray-400 text-sm">{payout.payout_date}</p>
                   </div>
                 </div>
@@ -176,6 +231,37 @@ const BatchDetails = ({ batch, onClose }: BatchDetailsProps) => {
             ))}
           </div>
         </Card>
+
+        {/* Weekly Contributions Status */}
+        {weeklyContributions.length > 0 && (
+          <Card className="glassmorphism-dark p-4 mb-6 border-0">
+            <h4 className="text-lg font-semibold text-white mb-3">Current Week Contributions</h4>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {weeklyContributions
+                .filter(contrib => contrib.week_number === currentWeek)
+                .map((contribution, index) => (
+                <div key={index} className="flex items-center justify-between p-2 bg-gray-800/30 rounded">
+                  <div>
+                    <p className="text-white text-sm font-medium">
+                      {contribution.profiles?.full_name || `Member ${index + 1}`}
+                    </p>
+                    <p className="text-gray-400 text-xs">Week {contribution.week_number}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-white text-sm">KES {contribution.amount_due.toLocaleString()}</p>
+                    <Badge className={`text-xs ${
+                      contribution.status === 'paid' ? 'bg-green-500/20 text-green-400' :
+                      contribution.status === 'overdue' ? 'bg-red-500/20 text-red-400' :
+                      'bg-yellow-500/20 text-yellow-400'
+                    }`}>
+                      {contribution.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* Members List */}
         <Card className="glassmorphism-dark p-4 border-0">

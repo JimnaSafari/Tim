@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      batch_agreements: {
+        Row: {
+          agreement_content: string
+          batch_id: string
+          created_at: string | null
+          id: string
+          member_signatures: Json | null
+          organizer_signature: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          agreement_content: string
+          batch_id: string
+          created_at?: string | null
+          id?: string
+          member_signatures?: Json | null
+          organizer_signature?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          agreement_content?: string
+          batch_id?: string
+          created_at?: string | null
+          id?: string
+          member_signatures?: Json | null
+          organizer_signature?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_agreements_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: true
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       batch_members: {
         Row: {
           batch_id: string
@@ -56,48 +94,158 @@ export type Database = {
       }
       batches: {
         Row: {
+          agreement_generated: boolean | null
           created_at: string | null
           created_by: string
           current_members: number | null
+          current_week: number | null
           description: string | null
           id: string
           invite_code: string
           max_members: number
           monthly_contribution: number
           name: string
+          payout_schedule_generated: boolean | null
+          payout_start_date: string | null
+          service_fee_per_member: number | null
           status: string | null
+          total_weeks: number | null
           updated_at: string | null
+          weekly_contribution: number | null
         }
         Insert: {
+          agreement_generated?: boolean | null
           created_at?: string | null
           created_by: string
           current_members?: number | null
+          current_week?: number | null
           description?: string | null
           id?: string
           invite_code: string
           max_members?: number
           monthly_contribution: number
           name: string
+          payout_schedule_generated?: boolean | null
+          payout_start_date?: string | null
+          service_fee_per_member?: number | null
           status?: string | null
+          total_weeks?: number | null
           updated_at?: string | null
+          weekly_contribution?: number | null
         }
         Update: {
+          agreement_generated?: boolean | null
           created_at?: string | null
           created_by?: string
           current_members?: number | null
+          current_week?: number | null
           description?: string | null
           id?: string
           invite_code?: string
           max_members?: number
           monthly_contribution?: number
           name?: string
+          payout_schedule_generated?: boolean | null
+          payout_start_date?: string | null
+          service_fee_per_member?: number | null
           status?: string | null
+          total_weeks?: number | null
           updated_at?: string | null
+          weekly_contribution?: number | null
         }
         Relationships: [
           {
             foreignKeyName: "batches_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contribution_reminders: {
+        Row: {
+          batch_id: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          message_template: string
+          template_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message_template: string
+          template_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message_template?: string
+          template_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contribution_reminders_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_schedules: {
+        Row: {
+          batch_id: string
+          created_at: string | null
+          id: string
+          is_paid: boolean | null
+          member_id: string
+          payment_date: string | null
+          payout_amount: number
+          payout_date: string
+          week_number: number
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string | null
+          id?: string
+          is_paid?: boolean | null
+          member_id: string
+          payment_date?: string | null
+          payout_amount: number
+          payout_date: string
+          week_number: number
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string | null
+          id?: string
+          is_paid?: boolean | null
+          member_id?: string
+          payment_date?: string | null
+          payout_amount?: number
+          payout_date?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_schedules_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_schedules_member_id_fkey"
+            columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -244,6 +392,60 @@ export type Database = {
             foreignKeyName: "user_referral_codes_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_contributions: {
+        Row: {
+          amount_due: number
+          amount_paid: number | null
+          batch_id: string
+          created_at: string | null
+          id: string
+          member_id: string
+          payment_date: string | null
+          reminder_sent: boolean | null
+          status: string | null
+          week_number: number
+        }
+        Insert: {
+          amount_due: number
+          amount_paid?: number | null
+          batch_id: string
+          created_at?: string | null
+          id?: string
+          member_id: string
+          payment_date?: string | null
+          reminder_sent?: boolean | null
+          status?: string | null
+          week_number: number
+        }
+        Update: {
+          amount_due?: number
+          amount_paid?: number | null
+          batch_id?: string
+          created_at?: string | null
+          id?: string
+          member_id?: string
+          payment_date?: string | null
+          reminder_sent?: boolean | null
+          status?: string | null
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_contributions_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_contributions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
