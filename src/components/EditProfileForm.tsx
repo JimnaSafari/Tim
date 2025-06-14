@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import { X } from "lucide-react";
-import { simpleToast } from "@/utils/simpleToast";
 
 interface EditProfileFormProps {
   initialName: string;
@@ -13,6 +12,40 @@ interface EditProfileFormProps {
   onClose: () => void;
   onSuccess: () => void;
 }
+
+// Simple toast function to avoid any import issues
+const showToast = (title: string, description: string, variant: 'default' | 'destructive' = 'default') => {
+  const toastEl = document.createElement('div');
+  toastEl.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg max-w-sm transition-all duration-300 ${
+    variant === 'destructive' 
+      ? 'bg-red-600 text-white border border-red-700' 
+      : 'bg-green-600 text-white border border-green-700'
+  }`;
+  
+  toastEl.innerHTML = `
+    <div class="font-medium">${title}</div>
+    <div class="text-sm opacity-90 mt-1">${description}</div>
+  `;
+  
+  document.body.appendChild(toastEl);
+  
+  setTimeout(() => {
+    toastEl.style.transform = 'translateX(0)';
+    toastEl.style.opacity = '1';
+  }, 10);
+  
+  setTimeout(() => {
+    if (document.body.contains(toastEl)) {
+      toastEl.style.transform = 'translateX(100%)';
+      toastEl.style.opacity = '0';
+      setTimeout(() => {
+        if (document.body.contains(toastEl)) {
+          document.body.removeChild(toastEl);
+        }
+      }, 300);
+    }
+  }, 3000);
+};
 
 const EditProfileForm = ({
   initialName,
@@ -29,35 +62,53 @@ const EditProfileForm = ({
     setLoading(true);
 
     try {
-      // Update name in public.profiles (via edge function or via RPC or direct table update)
+      console.log('Starting profile update...', { name, email, initialEmail });
+      
+      // Get current user session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error('No valid session found');
+      }
+
+      console.log('Session found, updating profile...');
+      
+      // Update name in public.profiles using the authenticated user's ID
       const { error: profileError } = await supabase
         .from("profiles")
         .update({ full_name: name })
-        .eq("email", initialEmail);
+        .eq("id", session.user.id);
+
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw profileError;
+      }
+
+      console.log('Profile updated successfully');
 
       let emailError = null;
       // Only update email if changed
       if (email !== initialEmail) {
+        console.log('Updating email...');
         const { error } = await supabase.auth.updateUser({ email });
         emailError = error;
+        if (emailError) {
+          console.error('Email update error:', emailError);
+        }
       }
 
-      if (profileError || emailError) {
-        throw profileError || emailError;
+      if (emailError) {
+        throw emailError;
       }
 
-      simpleToast({
-        title: "Profile updated!",
-        description: "Your info was updated.",
-        variant: "default"
-      });
+      showToast("Profile updated!", "Your info was updated successfully.", "default");
       onSuccess();
     } catch (err: any) {
-      simpleToast({
-        title: "Update failed",
-        description: err?.message || "Unable to update profile.",
-        variant: "destructive"
-      });
+      console.error('Update failed:', err);
+      showToast(
+        "Update failed",
+        err?.message || "Unable to update profile.",
+        "destructive"
+      );
     } finally {
       setLoading(false);
     }
