@@ -1,77 +1,85 @@
-# TiM App Project
+# Tim - Flutter Savings App
 
-## Project info
+A modern Flutter application for managing savings and batch payments, built with Flutter and Supabase.
 
-**Repository**: https://github.com/JimnaSafari/TiM-APP.git
+## Features
 
-## How can I edit this code?
+- User Authentication
+- Batch Creation and Management
+- Savings Tracking
+- Profile Management
+- Modern UI with Material Design
+- Real-time Updates
+- Secure Payment Integration
 
-There are several ways of editing your application.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes.
+- Flutter SDK (latest version)
+- Dart SDK (latest version)
+- Supabase account
+- Android Studio / VS Code
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone https://github.com/JimnaSafari/TiM-APP.git
-
-# Step 2: Navigate to the project directory.
-cd TiM-APP
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+1. Clone the repository:
+```bash
+git clone https://github.com/JimnaSafari/Tim.git
+cd Tim
 ```
 
-**Edit a file directly in GitHub**
+2. Install dependencies:
+```bash
+flutter pub get
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+3. Configure environment variables:
+- Create a `.env` file in the root directory
+- Add your Supabase credentials:
+```
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-**Use GitHub Codespaces**
+4. Run the app:
+```bash
+flutter run
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Project Structure
 
-## What technologies are used for this project?
+```
+lib/
+├── config/           # Configuration files
+├── pages/           # Screen pages
+├── providers/       # State management
+├── services/        # API and service classes
+└── widgets/         # Reusable widgets
+```
 
-This project is built with:
+## Dependencies
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-You can deploy this project using various hosting platforms like:
-- Vercel
-- Netlify
-- GitHub Pages
-- AWS Amplify
-
-Choose the platform that best suits your needs and follow their deployment instructions.
+- flutter_riverpod: State management
+- supabase_flutter: Backend integration
+- go_router: Navigation
+- flutter_secure_storage: Secure storage
+- intl: Internationalization
 
 ## Contributing
 
-Feel free to contribute to this project by:
-1. Forking the repository
-2. Creating a new branch
-3. Making your changes
-4. Submitting a pull request
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
 
-This project is open source and available under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Contact
+
+Jimna Safari - [@JimnaSafari](https://github.com/JimnaSafari)
+
+Project Link: [https://github.com/JimnaSafari/Tim](https://github.com/JimnaSafari/Tim)
