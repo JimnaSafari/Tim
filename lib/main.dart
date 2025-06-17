@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_app/config/router.dart';
@@ -15,61 +16,39 @@ import 'pages/home/home_page.dart';
 import 'providers/auth_provider.dart';
 import 'config/env_config.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize environment configuration
-  EnvConfig.initialize(
-    environment: Environment.dev,
-    backendUrl: const String.fromEnvironment(
-      'BACKEND_URL',
-      defaultValue: 'http://localhost:10000',
-    ),
-    supabaseUrl: const String.fromEnvironment(
-      'SUPABASE_URL',
-      defaultValue: 'https://your-project.supabase.co',
-    ),
-    supabaseAnonKey: const String.fromEnvironment(
-      'SUPABASE_ANON_KEY',
-      defaultValue: 'your-anon-key',
-    ),
-    enableLogging: true,
+  
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
+  
+  // Initialize Supabase
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL'] ?? '',
+    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
-
+  
   runApp(
     const ProviderScope(
-      child: MyApp(),
+      child: TimApp(),
     ),
   );
 }
 
-class MyApp extends ConsumerWidget {
-  const MyApp({super.key});
+class TimApp extends ConsumerWidget {
+  const TimApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-
-    return MaterialApp(
-      title: 'Savings App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
-      home: authState.when(
-        data: (user) => user != null ? const HomePage() : const LoginPage(),
-        loading: () => const Scaffold(
-          body: LoadingView(message: 'Loading...'),
-        ),
-        error: (error, stack) => Scaffold(
-          body: ErrorView(
-            message: 'Error: $error',
-            onRetry: () {
-              ref.refresh(authProvider);
-            },
-          ),
-        ),
-      ),
+    final router = ref.watch(routerProvider);
+    
+    return MaterialApp.router(
+      title: 'Tim Savings App',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      routerConfig: router,
+      debugShowCheckedModeBanner: false,
     );
   }
 }

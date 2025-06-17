@@ -1,121 +1,127 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const _primaryColor = Color(0xFF007AFF);
-  static const _secondaryColor = Color(0xFF5856D6);
-  static const _errorColor = Color(0xFFFF3B30);
-  static const _successColor = Color(0xFF34C759);
-  static const _warningColor = Color(0xFFFF9500);
+  static const _primaryColor = Color(0xFF2196F3);
+  static const _secondaryColor = Color(0xFF03A9F4);
+  static const _errorColor = Color(0xFFD32F2F);
+  static const _backgroundColor = Color(0xFFF5F5F5);
+  static const _surfaceColor = Colors.white;
+  static const _textColor = Color(0xFF212121);
 
-  static final lightTheme = ThemeData(
+  static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.light(
       primary: _primaryColor,
       secondary: _secondaryColor,
       error: _errorColor,
-      surface: Colors.white,
-      background: const Color(0xFFF2F2F7),
+      background: _backgroundColor,
+      surface: _surfaceColor,
+      onPrimary: Colors.white,
+      onSecondary: Colors.white,
+      onError: Colors.white,
+      onBackground: _textColor,
+      onSurface: _textColor,
     ),
-    scaffoldBackgroundColor: const Color(0xFFF2F2F7),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.white,
+      backgroundColor: _primaryColor,
+      foregroundColor: Colors.white,
       elevation: 0,
-      centerTitle: true,
-      iconTheme: IconThemeData(color: Colors.black),
-      titleTextStyle: TextStyle(
-        color: Colors.black,
-        fontSize: 17,
-        fontWeight: FontWeight.w600,
-        fontFamily: 'Inter',
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _primaryColor,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
       ),
     ),
-    textTheme: const TextTheme(
-      displayLarge: TextStyle(
-        fontSize: 34,
-        fontWeight: FontWeight.bold,
-        fontFamily: 'Inter',
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Colors.grey),
       ),
-      displayMedium: TextStyle(
-        fontSize: 28,
-        fontWeight: FontWeight.bold,
-        fontFamily: 'Inter',
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Colors.grey),
       ),
-      displaySmall: TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.bold,
-        fontFamily: 'Inter',
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: _primaryColor),
       ),
-      bodyLarge: TextStyle(
-        fontSize: 17,
-        fontFamily: 'Inter',
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: _errorColor),
       ),
-      bodyMedium: TextStyle(
-        fontSize: 15,
-        fontFamily: 'Inter',
-      ),
-      bodySmall: TextStyle(
-        fontSize: 13,
-        fontFamily: 'Inter',
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    ),
+    cardTheme: CardTheme(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
     ),
   );
 
-  static final darkTheme = ThemeData(
+  static final ThemeData darkTheme = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.dark(
       primary: _primaryColor,
       secondary: _secondaryColor,
       error: _errorColor,
-      surface: const Color(0xFF1C1C1E),
-      background: const Color(0xFF000000),
+      background: const Color(0xFF121212),
+      surface: const Color(0xFF1E1E1E),
+      onPrimary: Colors.white,
+      onSecondary: Colors.white,
+      onError: Colors.white,
+      onBackground: Colors.white,
+      onSurface: Colors.white,
     ),
-    scaffoldBackgroundColor: const Color(0xFF000000),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF1C1C1E),
+      backgroundColor: Color(0xFF1E1E1E),
+      foregroundColor: Colors.white,
       elevation: 0,
-      centerTitle: true,
-      iconTheme: IconThemeData(color: Colors.white),
-      titleTextStyle: TextStyle(
-        color: Colors.white,
-        fontSize: 17,
-        fontWeight: FontWeight.w600,
-        fontFamily: 'Inter',
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _primaryColor,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
       ),
     ),
-    textTheme: const TextTheme(
-      displayLarge: TextStyle(
-        fontSize: 34,
-        fontWeight: FontWeight.bold,
-        fontFamily: 'Inter',
-        color: Colors.white,
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: const Color(0xFF2C2C2C),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Colors.grey),
       ),
-      displayMedium: TextStyle(
-        fontSize: 28,
-        fontWeight: FontWeight.bold,
-        fontFamily: 'Inter',
-        color: Colors.white,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Colors.grey),
       ),
-      displaySmall: TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.bold,
-        fontFamily: 'Inter',
-        color: Colors.white,
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: _primaryColor),
       ),
-      bodyLarge: TextStyle(
-        fontSize: 17,
-        fontFamily: 'Inter',
-        color: Colors.white,
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: _errorColor),
       ),
-      bodyMedium: TextStyle(
-        fontSize: 15,
-        fontFamily: 'Inter',
-        color: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    ),
+    cardTheme: CardTheme(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
-      bodySmall: TextStyle(
-        fontSize: 13,
-        fontFamily: 'Inter',
-        color: Colors.white,
-      ),
+      color: const Color(0xFF2C2C2C),
     ),
   );
 } 
